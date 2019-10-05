@@ -12,7 +12,7 @@
             "remote": true,
             "cwd": "${workspaceRoot}",
             "valuesFormatting": "parseText",
-            "executable": "./helloworld"
+            "executable": "./kernel"
         }
     ]
 }
