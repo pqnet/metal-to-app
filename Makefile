@@ -3,8 +3,9 @@ CC=clang-9
 ISOFILE=windows/img.iso
 
 TARGET=x86_64-none-elf
-FLAGS=-nostdlib -static -target $(TARGET)
-LINK_FLAGS=-fno-exceptions -fno-unwind-tables -ffreestanding -z max-page-size=4096 -Wl,-n -Wl,--build-id=none
+FLAGS=-g -nostdlib -static -target $(TARGET)
+CFLAGS=-mcmodel=kernel -mno-red-zone
+LINK_FLAGS=-fno-exceptions -fno-unwind-tables -ffreestanding -z max-page-size=0x200000 -Wl,-n -Wl,--build-id=none
 
 $(ISOFILE): kernel iso/boot/grub/grub.cfg
 	cp kernel iso
@@ -18,7 +19,7 @@ helloworld.o: helloworld.s
 	$(CC) $(FLAGS) $^ -c -o $@
  
 main.o: main.c
-	$(CC) $(FLAGS) $^ -c -o $@
+	$(CC) $(CFLAGS) $(FLAGS) $^ -c -o $@
 
 .PHONY: clean
 

@@ -67,7 +67,8 @@ return32:
 .code64
 _start64:
     mov MULTIBOOT_INFO, %rdi
-    call cstart
+    movabs $cstart, %rbx
+    call *%rbx
     jmp go32
 .globl write;
 write:
@@ -128,23 +129,38 @@ MULTIBOOT_INFO:
 .quad 0
 .align 0x1000,0
 PML4:
-.quad PDPT + 1 + 2
-
+.quad PDPT + 1 + 2 // first 512 gb 
+.rept 510
+.quad 0
+.endr
+.quad PDPT2 + 1 + 2 // last 512 gb
 .align 0x1000,0
-PDPT:
+PDPT: // covers first 512 gb of addresses
 .quad PD + 1 + 2
 
 .align 0x1000,0
-PD:
-.quad 0 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 1 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 2 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 3 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 4 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 5 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 6 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 7 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 8 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 9 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+PDPT2: // covers last 512 gb of addresses
+.rept 510
+.quad 0
+.endr
+.quad PD + 1 + 2 // 1gb 
+.align 0x1000,0
+PD: // covers 1 gb of addresses
+.quad 0x0 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x1 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x2 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x3 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x4 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x5 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x6 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x7 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x8 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x9 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0xa * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0xb * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0xc * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0xd * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0xe * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0xf * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
 .align 0x200000,0
 stack_begin:
