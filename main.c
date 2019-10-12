@@ -19,4 +19,5 @@ void println(char message[]) {
 void cstart(struct multiboot_info* multiboot) {
     println("Hello");
     println("World!");
+    cstart(multiboot);
 }

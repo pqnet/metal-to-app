@@ -66,6 +66,8 @@ return32:
     hlt
 .code64
 _start64:
+    mov $.stack_bottom, %rbp
+    mov %rbp, %rsp
     mov MULTIBOOT_INFO, %rdi
     movabs $cstart, %rbx
     call *%rbx
@@ -146,7 +148,7 @@ PDPT2: // covers last 512 gb of addresses
 .quad PD + 1 + 2 // 1gb 
 .align 0x1000,0
 PD: // covers 1 gb of addresses
-.quad 0x0 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x0 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
 .quad 0x1 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
 .quad 0x2 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
 .quad 0x3 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
@@ -162,5 +164,4 @@ PD: // covers 1 gb of addresses
 .quad 0xd * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
 .quad 0xe * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
 .quad 0xf * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.align 0x200000,0
-stack_begin:
+.align 0x1000,0
