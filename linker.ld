@@ -2,40 +2,41 @@ OUTPUT_FORMAT(elf64-x86-64)
 /*OUTPUT_FORMAT(elf32-x86-64) */
 SECTIONS {
     /* kernel starts at -2gb  = - 80000000*/
-    .KERNEL_BASE = 0xffffffff80000000;
+    KERNEL_BASE = 0xffffffff80000000;
     ENTRY(_start)
     . = 0x200000;
     .text0 : {
-        helloworld.o(.multiboot)
-        helloworld.o(.text)
+        *bootstrap.o(.multiboot)
+        *bootstrap.o(.text)
     }
     . = ALIGN(0x200000);
     .BOOTLOADER_END = .;
     . = 8 * 0x200000;
     .RO_END = .;
     . += 0x400000;
-    .data0 : { helloworld.o(.data) }
+    .data0 : { *bootstrap.o(.data) }
     .DATA_END = .;
-    . = .KERNEL_BASE + .BOOTLOADER_END;
-    .text : AT(ADDR(.text) - .KERNEL_BASE)  {
+    . = KERNEL_BASE + .BOOTLOADER_END;
+    .text : AT(ADDR(.text) - KERNEL_BASE)  {
         *(.text*)
     }
     . = ALIGN(0x200000);
-    .rodata : AT(ADDR(.rodata) - .KERNEL_BASE) {
+    .rodata : AT(ADDR(.rodata) - KERNEL_BASE) {
         *(.rodata*)
     }
-    . = .KERNEL_BASE + .RO_END;
+    . = KERNEL_BASE + .RO_END;
     .bss0 : {
         .stack_top = .;
-        . += 0x400000;
+        . += 0x3ffff8;
+        . += 0x000008;
         .stack_bottom = .;
     }
-    . = .KERNEL_BASE + .DATA_END;
+    . = KERNEL_BASE + .DATA_END;
     . = ALIGN(0x200000);
-    .data : AT(ADDR(.data) - .KERNEL_BASE) {
+    .data : AT(ADDR(.data) - KERNEL_BASE) {
         *(.data*)
     }
-    .bss : AT(ADDR(.bss) - .KERNEL_BASE){
+    .bss : AT(ADDR(.bss) - KERNEL_BASE){
         *(.bss*)
     }
 }

@@ -6,7 +6,7 @@ MULTIBOOT:
 .int 0xE4524FFE - 3 // 0xE4524FFE = -0x1BADB002 with 2 complement 
 .section .text
 HELLO:
-.ascii "hello world!\n\0\0\0"
+.ascii "hello world!\0\0\0"
 
 .globl _start
 _start:
@@ -61,14 +61,17 @@ go64:
     movw %ax, %fs
     movw %ax, %gs
     movw %ax, %ss
+    mov $IDTR, %eax
+    lidtl (%eax)
+
     jmpl $(CS64 - GDT),$_start64
 return32:
     hlt
 .code64
 _start64:
+    mov MULTIBOOT_INFO, %rdi
     mov $.stack_bottom, %rbp
     mov %rbp, %rsp
-    mov MULTIBOOT_INFO, %rdi
     movabs $cstart, %rbx
     call *%rbx
     jmp go32
@@ -96,6 +99,13 @@ printreturn:
     mov %r8, %rax
     ret
 go32:
+    // disable interrupts
+    pushfq
+    popq %rax
+    mov $0xfffffffffffffdff, %rbx
+    andq %rbx, %rax
+    pushq %rax
+    popfq
     // disable paging
     mov %cr0, %rax
     mov $0xffffffff7fffffff, %rbx
@@ -106,13 +116,15 @@ go32:
     // jmpl (($CS32 - $GDT)>>$3),$_start
     jmpl $(CS32 - GDT),$_hello32
 .section .data, "w"
-.align 0x200000
+.align 0x1000,0
+.globl GDT;
 GDT:
 // first descriptor in GDT is not used
 .quad 0
 CS32:
 // type code/data  presence limit 64bit
 .int 0xffff, 8<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
+.globl CS64;
 CS64:
 .int 0xffff, 8<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<21 + 1<<23
 DS32: 
@@ -126,9 +138,27 @@ ENDGDT:
 GDTR:
 .short (ENDGDT - GDT) - 1
 .int GDT
-.align 8
+
+.align 8,0
 MULTIBOOT_INFO:
 .quad 0
+
+.align 0x1000,0
+.globl IDT;
+IDT:
+.rept 256
+.int 0, 0, 0, 0
+.endr
+ENDIDT:
+// align the IDTR to the second word
+.align 4
+.short 0
+IDTR:
+.short (ENDIDT - IDT) - 1
+.int IDT
+
+
+
 .align 0x1000,0
 PML4:
 .quad PDPT + 1 + 2 // first 512 gb 
