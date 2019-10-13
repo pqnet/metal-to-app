@@ -30,6 +30,7 @@ loop:
     jmp loop
 halt:
     hlt
+    jmp halt
 go64:
     // disable paging (not necessary, grub does it for us)
     mov %cr0, %eax
@@ -61,9 +62,6 @@ go64:
     movw %ax, %fs
     movw %ax, %gs
     movw %ax, %ss
-    mov $IDTR, %eax
-    lidtl (%eax)
-
     jmpl $(CS64 - GDT),$_start64
 return32:
     hlt
@@ -72,6 +70,9 @@ _start64:
     mov MULTIBOOT_INFO, %rdi
     mov $.stack_bottom, %rbp
     mov %rbp, %rsp
+    // load new IDT
+    mov $IDTR, %rax
+    lidt (%rax)
     movabs $cstart, %rbx
     call *%rbx
     jmp go32
@@ -150,8 +151,9 @@ IDT:
 .int 0, 0, 0, 0
 .endr
 ENDIDT:
-// align the IDTR to the second word
-.align 4
+// align the IDTR to the second word of the second int
+.align 8
+.int 0
 .short 0
 IDTR:
 .short (ENDIDT - IDT) - 1

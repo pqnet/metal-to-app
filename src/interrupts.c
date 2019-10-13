@@ -54,13 +54,7 @@ void test_interrupt(struct interrupt_frame * frame) {
 }
 
 void enable_interrupts() {
-    asm volatile ("\
-        pushfq \n\
-        pop %%rbx \n\
-        or $0x0200, %%rbx \n\
-        push %%rbx \n\
-        popfq \n"
-        : : :"rbx", "cc", "memory");
+    asm volatile ("sti": : :"cc");
 }
 
 
