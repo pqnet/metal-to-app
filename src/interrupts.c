@@ -36,11 +36,11 @@ _Static_assert ( (40 == sizeof (struct interrupt_frame)), "Wrong interrupt frame
 void load_interrupt_fn(void(*fnAddr)(),unsigned entry_no) {
     struct idt_entry* entry = (void*)&IDT;
     entry += entry_no;
-    // memset(entry, 0, sizeof(struct idt_entry));
-    uintptr_t physaddr = (uintptr_t)fnAddr - (uintptr_t)&KERNEL_BASE;
-    entry->offset_lo = physaddr & 0xffff;
-    entry->offset_mid = (physaddr >> 16) & 0xffff;
-    entry->offset_high = (physaddr >> 32) & 0xffffffff;
+    memset(entry, 0, sizeof(struct idt_entry));
+    uintptr_t offset = (uintptr_t)fnAddr;
+    entry->offset_lo = offset & 0xffff;
+    entry->offset_mid = (offset >> 16) & 0xffff;
+    entry->offset_high = (offset >> 32) & 0xffffffff;
     entry->type = 14; // 14 = interrupt gate, 15 = trap gate
     entry->segment_sel = &CS64 - &GDT;
     entry->ist = 0; // TODO handle stack selection (when coming from userspace)
@@ -49,17 +49,17 @@ void load_interrupt_fn(void(*fnAddr)(),unsigned entry_no) {
 }
 
 __attribute__ ((interrupt))
-void test_interrupt(struct interrupt_frame * frame) {
-    println("PANIC!");
+void panic(struct interrupt_frame * frame) {
+    println("KERNEL PANIC!");
+    // no need to loop here, because interrupts are disabled as this is set as interrupt gate
+    asm volatile ("hlt");
 }
 
 void enable_interrupts() {
     asm volatile ("sti": : :"cc");
 }
 
-
 void load_interrupts() {
-    //for (int i = 0; i < 256; i++)
-    load_interrupt_fn(test_interrupt, 200);
+    load_interrupt_fn(panic, 200);
     enable_interrupts();
 }
