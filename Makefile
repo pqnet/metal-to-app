@@ -11,7 +11,7 @@ $(ISOFILE): kernel iso/boot/grub/grub.cfg
 	cp kernel iso
 	grub-mkrescue -d /usr/lib/grub/i386-pc -o $@ iso
 
-OBJECTS=src/bootstrap.o src/main.o src/interrupts.o src/print.o src/exceptions.o
+OBJECTS=src/bootstrap.o src/main.o src/interrupts.o src/print.o src/exceptions.o src/keyboard.o
 
 kernel: linker.ld $(OBJECTS)
 	$(CC) $(FLAGS) $(LINK_FLAGS) -Wl,-T,$^ -o $@

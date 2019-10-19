@@ -22,7 +22,8 @@ void cstart(struct multiboot_info* multiboot) {
     println("World!");
     load_exceptions(); // load default CPU exception handlers into IDT
     load_interrupts(); // load hardware interrupt handlers into IDT and configure PIC
-    enable_interrupts();
+    // enable_interrupts();
+    keyboard_test_loop();
 
     idle_loop();
 }
