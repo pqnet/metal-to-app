@@ -24,16 +24,9 @@ struct idt_entry {
 };
 _Static_assert ( (16 == sizeof (struct idt_entry)), "Wrong idt entry size");
 
-struct interrupt_frame {
-    void* RIP;
-    uint64_t CS;
-    uint64_t RFLAGS;
-    void* RSP;
-    uint64_t SS;
-};
 _Static_assert ( (40 == sizeof (struct interrupt_frame)), "Wrong interrupt frame size");
 
-void load_interrupt_fn(void(*fnAddr)(),unsigned entry_no) {
+void load_interrupt_fn(void(*fnAddr)(struct interrupt_frame*),unsigned entry_no, enum gate_type type) {
     struct idt_entry* entry = (void*)&IDT;
     entry += entry_no;
     memset(entry, 0, sizeof(struct idt_entry));
@@ -41,7 +34,7 @@ void load_interrupt_fn(void(*fnAddr)(),unsigned entry_no) {
     entry->offset_lo = offset & 0xffff;
     entry->offset_mid = (offset >> 16) & 0xffff;
     entry->offset_high = (offset >> 32) & 0xffffffff;
-    entry->type = 14; // 14 = interrupt gate, 15 = trap gate
+    entry->type = type;
     entry->segment_sel = &CS64 - &GDT;
     entry->ist = 0; // TODO handle stack selection (when coming from userspace)
     entry->dpl = 0; // descriptor privilege level
@@ -60,6 +53,6 @@ void enable_interrupts() {
 }
 
 void load_interrupts() {
-    load_interrupt_fn(panic, 200);
+    load_interrupt_fn(panic, 200, interrupt_gate);
     enable_interrupts();
 }
