@@ -2,6 +2,7 @@
 
 #include "portio.h"
 #include "print.h"
+#include "scancodes.h"
 
 void ps2data(uint8_t data)
 {
@@ -112,33 +113,19 @@ uint8_t kbdCommandQueueLength()
     return (kbdCommandQueueEnd + 16 - kbdCommandQueueBegin) % 16;
 }
 
-int processU64Scancode(uint64_t scanCode) {
-    if (scanCode == 0xE0 || scanCode == 0xF0) {
-        return 0;
-    }
-    return scanCode;
-}
-
 void processUsbCode(uint16_t usbCode) {
     printhex(usbCode);
     println("");
 }
+
 void processScancode(uint8_t scanCode) {
     static uint64_t codeBuffer = 0;
     codeBuffer <<= 8;
     codeBuffer += scanCode;
-    // TODO process scancode
-    int usbCode = processU64Scancode(codeBuffer);
-    if (usbCode != 0) {
-        codeBuffer = 0;
-        if (usbCode > 0) {
-            processUsbCode(usbCode);
-        } else {
-            switch (usbCode) {
-                // TODO handle errors
-            }
-        }
-    }
+    int16_t usbCode = 0;;
+    while ((usbCode = ps2Set2ToUsb(&codeBuffer))) {
+        processUsbCode(usbCode);
+    };
 }
 
 void keyboard_test_loop()
