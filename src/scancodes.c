@@ -406,7 +406,7 @@ int16_t ps2Set2ToUsb(uint64_t *scancodeBuffer)
             return KEY_NONE;
         }
     case 0xE0F0:
-        *scancodeBuffer = code & 0xff | 0xE000;
+        *scancodeBuffer = (code & 0xff) | 0xE000;
         return -ps2Set2ToUsb(scancodeBuffer);
     case 0xF0:
         *scancodeBuffer = code & 0xff;
