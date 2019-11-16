@@ -131,10 +131,19 @@ CS64:
 DS32: 
 .int 0xffff, 2<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
 .align 0x1000,0
-.quad 0,0,0,0
+//.quad 0,0,0,0
 ENDGDT:
-// align the GDTR to the second word
-.align 4
+IDT:
+.rept 256
+.int 0, 0, 0, 0
+.endr
+ENDIDT:
+.globl IDT;
+.align 0x1000,0
+
+// align the GDTR to the second word of the second int
+.align 8
+.int 0
 .short 0
 GDTR:
 .short (ENDGDT - GDT) - 1
@@ -144,13 +153,6 @@ GDTR:
 MULTIBOOT_INFO:
 .quad 0
 
-.align 0x1000,0
-.globl IDT;
-IDT:
-.rept 256
-.int 0, 0, 0, 0
-.endr
-ENDIDT:
 // align the IDTR to the second word of the second int
 .align 8
 .int 0
@@ -160,7 +162,7 @@ IDTR:
 .int IDT
 
 
-
+// page tables
 .align 0x1000,0
 PML4:
 .quad PDPT + 1 + 2 // first 512 gb 
@@ -171,7 +173,6 @@ PML4:
 .align 0x1000,0
 PDPT: // covers first 512 gb of addresses
 .quad PD + 1 + 2
-
 .align 0x1000,0
 PDPT2: // covers last 512 gb of addresses
 .rept 510
