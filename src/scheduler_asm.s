@@ -4,8 +4,7 @@
  * case 3. I'm preempted, and I need to switch to the scheduler task
  */
 
-// assume asm_switch_task is called in SYS-V calling convention
-// void switch_task(interrupt_frame* frame, task_switch_info* tsi)
+// interrupt calling convention
 .global asm_reschedule
 asm_reschedule:
     push %rbp // rsp -=8
@@ -14,12 +13,12 @@ asm_reschedule:
     push %rax
     push %rbx
     // do the magic
-    // this will put the thread id in %rbx
+    // this will put the thread id in %rbx (TODO)
     mov $0, %rbx
     // point %rbx to the start of current_task
     mov $current_task_table, %rax
     mov (%rax,%rbx, 0x8), %rax
-    // stack now points to the end of current_task
+    // stack now points to the end of current_task's registers
     lea 0xa0(%rax), %rsp
     push %r15
     push %r14
@@ -34,47 +33,49 @@ asm_reschedule:
     push %rdx
     push %rcx
     // save rbx
-    mov -0x10(%rbp), %rbx
-    push %rbx
+    mov -0x10(%rbp), %rax
+    push %rax
     // save rax
-    mov -0x8(%rbp), %rbx
-    push %rbx
+    mov -0x8(%rbp), %rax
+    push %rax
     // save rbp
-    mov 0x0(%rbp), %rbx
-    push %rbx
-    // save SS
-    mov 0x8(%rbp), %rbx
-    push %rbx
-    // save RSP
-    mov 0x10(%rbp), %rbx
-    push %rbx
-    // save RFLAGS
-    mov 0x18(%rbp), %rbx
-    push %rbx
-    // save CS
-    mov 0x20(%rbp), %rbx
-    push %rbx
+    mov 0x0(%rbp), %rax
+    push %rax
     // save RIP
-    mov 0x28(%rbp), %rbx
-    push %rbx
+    mov 0x08(%rbp), %rax
+    push %rax
+    // save CS
+    mov 0x10(%rbp), %rax
+    push %rax
+    // save RFLAGS
+    mov 0x18(%rbp), %rax
+    push %rax
+    // save RSP
+    mov 0x20(%rbp), %rax
+    push %rax
+    // save SS
+    mov 0x28(%rbp), %rax
+    push %rax
+    // restore a sane stack for calling scheduler
+    mov %rbp, %rsp
     // load new task
     mov %rbx, %rdi
-    call scheduler
+    call scheduler // calling convention: first argument %rdi, return value %rax
     // stack now points to the start of this task
     mov %rax, %rsp
-    // load RIP
+    // load SS
     pop %rbx
     mov %rbx, 0x28(%rbp)
-    // load CS
+    // load RSP
     pop %rbx
     mov %rbx, 0x20(%rbp)
     // load RFLAGS
     pop %rbx
     mov %rbx, 0x18(%rbp)
-    // load RSP
+    // load CS
     pop %rbx
     mov %rbx, 0x10(%rbp)
-    // load SS
+    // load RIP
     pop %rbx
     mov %rbx, 0x8(%rbp)
     // load rbp
@@ -97,4 +98,4 @@ asm_reschedule:
     // magic is done, let's go back to sanity
     mov %rbp, %rsp
     pop %rbp
-    iret
+    iretq

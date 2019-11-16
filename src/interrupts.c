@@ -153,8 +153,8 @@ void enable_interrupts() {
     outb(0xA1, 0x01);
 
     // set mask
-    outb(0x21, 0x00);
-    outb(0xA1, 0x00);
+    outb(0x21, 0xff);
+    outb(0xA1, 0xff);
 
     asm volatile ("sti": : :"cc");
 }
