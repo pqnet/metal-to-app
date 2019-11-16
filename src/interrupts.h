@@ -23,4 +23,6 @@ static inline void load_interrupt_fn_error(void(*fnAddr)(struct interrupt_frame*
 void load_interrupts();
 void enable_interrupts();
 
+#define interrupt(interrupt_vector) asm volatile("int $" #interrupt_vector)
+
 #endif // INTERRUPTS_H

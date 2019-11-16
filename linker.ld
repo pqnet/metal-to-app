@@ -4,7 +4,7 @@ SECTIONS {
     /* kernel starts at -2gb  = - 80000000*/
     KERNEL_BASE = 0xffffffff80000000;
     ENTRY(_start)
-    . = 0x200000;
+    . = 0x100000;
     .text0 : {
         *bootstrap.o(.multiboot)
         *bootstrap.o(.text)
@@ -39,4 +39,5 @@ SECTIONS {
     .bss : AT(ADDR(.bss) - KERNEL_BASE){
         *(.bss*)
     }
+    FREEMEMORY_START= ALIGN(0x200000) - KERNEL_BASE;
 }

@@ -4,7 +4,7 @@ ISOFILE=windows/img.iso
 
 TARGET=x86_64-none-elf
 # note: we can't enable O2 because the size of relocation symbols for 
-FLAGS=-g -O3 -nostdlib -static -target $(TARGET)
+FLAGS=-g -O0 -nostdlib -static -target $(TARGET)
 CFLAGS=-mcmodel=kernel -mno-red-zone -mno-sse
 LINK_FLAGS=-fno-exceptions -fno-unwind-tables -ffreestanding -z max-page-size=0x200000 -Wl,-n -Wl,--build-id=none
 
@@ -12,7 +12,12 @@ $(ISOFILE): kernel iso/boot/grub/grub.cfg
 	cp kernel iso
 	grub-mkrescue -d /usr/lib/grub/i386-pc -o $@ iso
 
-OBJECTS=src/bootstrap.o src/main.o src/interrupts.o src/print.o src/exceptions.o src/keyboard.o src/scancodes.o src/scheduler.o src/scheduler_asm.o
+OBJECTS=\
+src/bootstrap.o src/interrupts.o src/print.o\
+src/exceptions.o src/keyboard.o src/scancodes.o\
+src/scheduler.o src/scheduler_asm.o src/test_scheduler.o\
+src/frame.o\
+src/main.o
 
 kernel: linker.ld $(OBJECTS)
 	$(CC) $(FLAGS) $(LINK_FLAGS) -Wl,-T,$^ -o $@
