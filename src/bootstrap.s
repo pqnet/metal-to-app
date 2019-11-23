@@ -45,6 +45,7 @@ _start:
 .code64
 bootstrap64:
     mov MULTIBOOT_INFO, %rdi
+    lea KERNEL_BASE(%rdi), %rdi
     mov $.stack_bottom, %rbp
     mov %rbp, %rsp
     // load new IDT
@@ -107,6 +108,7 @@ IDTR:
 
 // page tables
 .align 0x1000,0
+.globl PML4
 PML4:
 .quad PDPT + 1 + 2 // first 512 gb 
 .rept 510
@@ -114,15 +116,18 @@ PML4:
 .endr
 .quad PDPT2 + 1 + 2 // last 512 gb
 .align 0x1000,0
+.globl PDPT
 PDPT: // covers first 512 gb of addresses
 .quad PD + 1 + 2
 .align 0x1000,0
+.globl PDPT2
 PDPT2: // covers last 512 gb of addresses
 .rept 510
 .quad 0
 .endr
 .quad PD + 1 + 2 // 1gb 
 .align 0x1000,0
+.globl PD
 PD: // covers 1 gb of addresses
 .quad 0x0 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
 .quad 0x1 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0

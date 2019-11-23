@@ -4,6 +4,7 @@
 #include "print.h"
 
 extern char FREEMEMORY_START[1];
+extern char KERNEL_BASE[1];
 void setup_frame_allocator(struct multiboot_info* multiboot) {
     printhex(multiboot->flags);
     println(" flags");
@@ -23,7 +24,7 @@ void setup_frame_allocator(struct multiboot_info* multiboot) {
     printhex(multiboot->mmap_addr);
     println(" mmap_addr");
     
-    char* mmap_startb = (char*) (uintptr_t)multiboot->mmap_addr;
+    char* mmap_startb = (char*) (uintptr_t)multiboot->mmap_addr + (uintptr_t)KERNEL_BASE;
     char* mmap_endb = mmap_startb + multiboot->mmap_length;
     struct mmap_info* mmap_biggest_map = NULL;
 

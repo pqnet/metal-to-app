@@ -8,6 +8,7 @@
 
 #include "test_scheduler.h"
 #include "multiboot.h"
+#include "memory.h"
 
 noreturn void idle_loop();
 noreturn void idle_loop() {
@@ -19,6 +20,7 @@ noreturn void idle_loop() {
 
 noreturn void cstart(struct multiboot_info* multiboot);
 noreturn void cstart(struct multiboot_info* multiboot) {
+    forgetLinearAddresses();
     load_exceptions(); // load default CPU exception handlers into IDT
     load_interrupts(); // load hardware interrupt handlers into IDT and configure PIC
     enable_interrupts();
