@@ -5,10 +5,10 @@
 #include "exceptions.h"
 #include "portio.h"
 
-extern char IDT;
-extern char KERNEL_BASE;
-extern char CS64;
-extern char GDT;
+extern char IDT[1];
+extern char KERNEL_BASE[1];
+extern char CS64[1];
+extern char GDT[1];
 
 
 struct idt_entry {
@@ -27,7 +27,7 @@ struct idt_entry {
 _Static_assert ( (16 == sizeof (struct idt_entry)), "Wrong idt entry size");
 
 void load_interrupt_fn(void(*fnAddr)(struct interrupt_frame*),unsigned entry_no, enum gate_type type) {
-    struct idt_entry* entry = (void*)&IDT;
+    struct idt_entry* entry = (void*)IDT + (uintptr_t)KERNEL_BASE;
     entry += entry_no;
     memset(entry, 0, sizeof(struct idt_entry));
     uintptr_t offset = (uintptr_t)fnAddr;

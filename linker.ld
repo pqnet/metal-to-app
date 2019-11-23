@@ -36,7 +36,7 @@ SECTIONS {
     .data : AT(ADDR(.data) - KERNEL_BASE) {
         *(.data*)
     }
-    .bss : AT(ADDR(.bss) - KERNEL_BASE){
+    .bss : AT(ADDR(.bss) - KERNEL_BASE) {
         *(.bss*)
     }
     FREEMEMORY_START= ALIGN(0x200000) - KERNEL_BASE;

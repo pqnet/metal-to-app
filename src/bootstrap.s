@@ -1,37 +1,16 @@
 .section .multiboot, "d"
-.align 8
-MULTIBOOT:
 .int 0x1BADB002
 .int 3
-.int 0xE4524FFE - 3 // 0xE4524FFE = -0x1BADB002 with 2 complement 
-.section .text
-HELLO:
-.ascii "hello world!\0\0\0"
+.int 0xE4524FFE - 3 // 0xE4524FFE = -0x1BADB002 with 2 complement
 
+.section .text
+.align 8,0
+MULTIBOOT_INFO:
+.quad 0
+.code32
 .globl _start
 _start:
-    .code32
     mov %ebx, MULTIBOOT_INFO
-    jmp go64
-_hello32:
-    movl $HELLO, %esi
-    movl $0xB8000, %edi
-loop:
-    xor %eax, %eax
-    movb (%esi), %al
-    movb %al, (%edi)
-    or %al, %al
-    jz halt
-    inc %esi
-    inc %edi
-    movb $0xf, %al
-    movb %al, (%edi)
-    inc %edi
-    jmp loop
-halt:
-    hlt
-    jmp halt
-go64:
     // disable paging (not necessary, grub does it for us)
     mov %cr0, %eax
     andl $0x7fffffff, %eax
@@ -62,11 +41,9 @@ go64:
     movw %ax, %fs
     movw %ax, %gs
     movw %ax, %ss
-    jmpl $(CS64 - GDT),$_start64
-return32:
-    hlt
+    jmpl $(CS64 - GDT),$bootstrap64
 .code64
-_start64:
+bootstrap64:
     mov MULTIBOOT_INFO, %rdi
     mov $.stack_bottom, %rbp
     mov %rbp, %rsp
@@ -75,47 +52,17 @@ _start64:
     lidt (%rax)
     movabs $cstart, %rbx
     call *%rbx
-    jmp go32
-.globl write;
-write:
-    // %rsi string to write (2nd parameter)
-    // %rdi offset to write (1st parameter)
-    addq %rdi, %rdi
-    addq $0xB8000, %rdi
-    xor %r8, %r8
-    xor %rax, %rax
-loop64:
-    movb (%rsi), %al
-    or %al, %al
-    jz printreturn
-    movb %al, (%rdi)
-    inc %rdi
-    inc %r8
-    movb $0xf, %bl
-    movb %bl, (%rdi)
-    inc %rdi
-    inc %rsi
-    jmp loop64
-printreturn:
-    mov %r8, %rax
-    ret
 go32:
     // disable interrupts
-    pushfq
-    popq %rax
-    mov $0xfffffffffffffdff, %rbx
-    andq %rbx, %rax
-    pushq %rax
-    popfq
+    cli
     // disable paging
     mov %cr0, %rax
     mov $0xffffffff7fffffff, %rbx
     andq %rbx, %rax
     mov %rax, %cr0
 .code32
-    // mov (($CS32 - $GDT)/8), %al
-    // jmpl (($CS32 - $GDT)>>$3),$_start
-    jmpl $(CS32 - GDT),$_hello32
+    hlt
+
 .section .data, "w"
 .align 0x1000,0
 .globl GDT;
@@ -148,10 +95,6 @@ ENDIDT:
 GDTR:
 .short (ENDGDT - GDT) - 1
 .int GDT
-
-.align 8,0
-MULTIBOOT_INFO:
-.quad 0
 
 // align the IDTR to the second word of the second int
 .align 8

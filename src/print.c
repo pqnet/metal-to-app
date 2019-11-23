@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include "print.h"
 
-extern int write(ptrdiff_t screen_offset, char* message);
 int cwrite(ptrdiff_t screen_offset, char* message) {
     static char volatile*const vga_begin = (char*)0xB8000;
     char volatile* start = vga_begin + 2 * screen_offset;
