@@ -4,37 +4,57 @@
 #include "interrupts.h"
 #include "memory.h"
 
-linear_address freemem_start;
-linear_address freemem_end; // first non-free address after last page
-
-alignas(0x1000)
-struct free_page {
-    struct free_page* nextFreePage;
+alignas(0x1000) struct free_frame
+{
+    union {
+        struct free_frame *nextFreePage;
+        uint8_t memory[0x1000];
+    };
 };
-struct free_page* freelist;
+struct free_frame *freemem_start;
+struct free_frame *freemem_end; // first non-free address after last page
+struct free_frame *freelist;
 
-void init_frame_allocator(linear_address fm_start, linear_address fm_end) {
-    freemem_start = ((fm_start + 0xfff) / 0x1000)* 0x1000;
-    freemem_end = (fm_end / 0x1000) * 0x1000;
+void init_frame_allocator(linear_address fm_start, linear_address fm_end)
+{
+    freemem_start = linearAddressToPtr(
+        ((fm_start + 0xfff) / 0x1000) * 0x1000);
+    freemem_end = linearAddressToPtr(
+        (fm_end / 0x1000) * 0x1000);
     freelist = NULL;
 }
-
-linear_address frame_alloc() {
-    if (freelist !== NULL) {
-        struct free_page* freePage = freelist;
+static inline struct free_frame *frame_alloc_internal()
+{
+    if (freelist != NULL)
+    {
+        struct free_frame *freePage = freelist;
         freelist = freePage->nextFreePage;
-        return pointerToLinearAddres(freePage);
+        return freePage;
     }
-    if (freemem_start == freemem_end) {
+    if (freemem_start == freemem_end)
+    {
         panic();
     }
-    linear_address ret = freemem_start;
-    freemem_start += 0x1000;
-    return ret;
+    return freemem_start++;
 }
 
-void frame_dealloc(linear_address frame_address) {
-    struct free_page* freePage = linearAddressToPtr(frame_address);
+linear_address frame_alloc()
+{
+    return pointerToLinearAddres(frame_alloc_internal());
+}
+linear_address frame_alloc_zero()
+{
+    struct free_frame *frame = frame_alloc_internal();
+    for (int i = 0; i < 0x1000; i++)
+    {
+        frame->memory[i] = 0;
+    }
+    return pointerToLinearAddres(frame);
+}
+
+void frame_dealloc(linear_address frame_address)
+{
+    struct free_frame *freePage = linearAddressToPtr(frame_address);
     freePage->nextFreePage = freelist;
     freelist = freePage;
 }
