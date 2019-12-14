@@ -20,7 +20,7 @@ struct pagetable_entry
             bool : 1;
             bool accessed : 1;
             bool dirty : 1;
-            bool pagesize : 1;
+            bool big : 1;
             uint32_t: 24;
             uint32_t: 32;
         } __attribute__((packed));
@@ -29,6 +29,9 @@ struct pagetable_entry
 
 static_assert(8 == sizeof(struct pagetable_entry), "pagetable entry not packed");
 
-void forgetLinearAddresses();
+void createKernelAddressSpace();
+
+void* linearAddressToPtr(linear_address a);
+linear_address pointerToLinearAddres(void* ptr);
 
 #endif // MEMORY_H

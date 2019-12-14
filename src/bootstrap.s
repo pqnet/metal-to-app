@@ -51,6 +51,8 @@ bootstrap64:
     // load new IDT
     mov $IDTR, %rax
     lidt (%rax)
+    mov $GDTR, %rax
+    lgdt (%rax)
     movabs $cstart, %rbx
     call *%rbx
 go32:
@@ -96,6 +98,7 @@ ENDIDT:
 GDTR:
 .short (ENDGDT - GDT) - 1
 .int GDT
+.int 0xffff8000
 
 // align the IDTR to the second word of the second int
 .align 8
@@ -104,7 +107,7 @@ GDTR:
 IDTR:
 .short (ENDIDT - IDT) - 1
 .int IDT
-
+.int 0xffff8000
 
 // page tables
 .align 0x1000,0
