@@ -54,3 +54,14 @@ void createKernelAddressSpace() {
     }
     asm volatile("mov %0, %%cr3"::"r"(PML4));
 }
+
+void init_address_space(struct pagetable_entry root_pagetable[]) {
+    // map linear addresses into entry 256
+    root_pagetable[256].address = pointerToLinearAddres(pdptlinear1);
+    root_pagetable[256].present = true;
+    root_pagetable[256].writable = true;
+    // map kernel memory into entry 511
+    root_pagetable[511].address = pointerToLinearAddres(pdpthigh);
+    root_pagetable[511].present = true;
+    root_pagetable[511].writable = true;
+}

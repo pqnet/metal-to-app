@@ -34,4 +34,6 @@ void createKernelAddressSpace();
 void* linearAddressToPtr(linear_address a);
 linear_address pointerToLinearAddres(void* ptr);
 
+void init_address_space(struct pagetable_entry root_pagetable[]);
+
 #endif // MEMORY_H
