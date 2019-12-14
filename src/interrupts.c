@@ -42,7 +42,7 @@ void load_interrupt_fn(void(*fnAddr)(struct interrupt_frame*),unsigned entry_no,
 }
 
 __attribute__ ((interrupt))
-void panic(struct interrupt_frame * frame) {
+void ih_panic(struct interrupt_frame * frame) {
     println("KERNEL PANIC!");
     // no need to loop here, because interrupts are disabled as this is set as interrupt gate
     asm volatile ("hlt");
@@ -176,5 +176,5 @@ void load_interrupts() {
     load_interrupt_fn(irq13, 0x2d, interrupt_gate);
     load_interrupt_fn(irq14, 0x2e, interrupt_gate);
     load_interrupt_fn(irq15, 0x2f, interrupt_gate);
-    load_interrupt_fn(panic, 200, interrupt_gate);
+    load_interrupt_fn(ih_panic, 200, interrupt_gate);
 }

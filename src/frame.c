@@ -13,8 +13,7 @@ void init_frame_allocator(uintptr_t fm_start, uintptr_t fm_end) {
 
 uintptr_t frame_alloc() {
     if (freemem_start == freemem_end) {
-        // panic!
-        interrupt(200);
+        panic();
     }
     uintptr_t ret = freemem_start;
     freemem_start += 0x1000;

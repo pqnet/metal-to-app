@@ -2,6 +2,7 @@
 #define INTERRUPTS_H
 #include <stdint.h>
 #include <assert.h>
+#include <stdnoreturn.h>
 
 struct interrupt_frame {
     void* RIP;
@@ -24,5 +25,7 @@ void load_interrupts();
 void enable_interrupts();
 
 #define interrupt(interrupt_vector) asm volatile("int $" #interrupt_vector)
+
+noreturn inline void panic() { for(;;) interrupt(200); };
 
 #endif // INTERRUPTS_H

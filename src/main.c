@@ -28,6 +28,7 @@ noreturn void cstart(struct multiboot_info* multiboot) {
 
     init_scheduler();
 
+    panic();
     //test_scheduler();
     idle_loop();
 }

@@ -3,6 +3,7 @@
 #include "portio.h"
 #include "print.h"
 #include "scancodes.h"
+#include "interrupts.h"
 
 void ps2data(uint8_t data)
 {
@@ -83,8 +84,7 @@ void kbdCommandQueuePush(struct keyboardCommand cmd)
     uint8_t nextEnd = (kbdCommandQueueEnd + 1) % 16;
     if (nextEnd == kbdCommandQueueBegin)
     {
-        asm volatile("int $200");
-        return;
+        panic();
     }
     kbdCommandQueue[kbdCommandQueueEnd] = cmd;
     kbdCommandQueueEnd = nextEnd;
