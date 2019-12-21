@@ -26,6 +26,6 @@ void enable_interrupts();
 
 #define interrupt(interrupt_vector) asm volatile("int $" #interrupt_vector)
 
-noreturn inline void panic() { for(;;) interrupt(200); };
+noreturn static inline void panic() { for(;;) interrupt(200); };
 
 #endif // INTERRUPTS_H
