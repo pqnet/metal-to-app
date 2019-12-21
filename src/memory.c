@@ -11,6 +11,8 @@ extern char PML4[1];
 #define pdpthigh ((struct pagetable_entry*)(PDPT2+(uintptr_t)KERNEL_BASE))
 #define pml4 ((struct pagetable_entry*)(PML4+(uintptr_t)KERNEL_BASE))
 
+linear_address kernel_address_space;
+
 static void * const LINEAR_START = (void*)0xFFFF800000000000;
 const linear_address addrshift4K = 1UL<<12;
 const linear_address addrshift2M = addrshift4K<<9;
@@ -41,6 +43,7 @@ linear_address pointerToLinearAddres(void* ptr) {
 }
 
 void createKernelAddressSpace() {
+    kernel_address_space = pointerToLinearAddres(pml4); 
     pml4[0].address = 0;
 
     pml4[256].address = pointerToLinearAddres(pdptlinear1);

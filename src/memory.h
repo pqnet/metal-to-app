@@ -30,6 +30,7 @@ struct pagetable_entry
 static_assert(8 == sizeof(struct pagetable_entry), "pagetable entry not packed");
 
 void createKernelAddressSpace();
+extern linear_address kernel_address_space;
 
 void* linearAddressToPtr(linear_address a);
 linear_address pointerToLinearAddres(void* ptr);
