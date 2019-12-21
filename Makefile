@@ -12,10 +12,11 @@ $(ISOFILE): kernel iso/boot/grub/grub.cfg
 	grub-mkrescue -d /usr/lib/grub/i386-pc -o $@ iso
 
 OBJECTS=\
+src/memset.o src/multiboot.o\
 src/bootstrap.o src/interrupts.o src/print.o\
 src/exceptions.o src/keyboard.o src/scancodes.o\
 src/scheduler.o src/scheduler_asm.o src/test_scheduler.o\
-src/frame.o src/memory.o src/multiboot.o\
+src/frame.o src/memory.o\
 src/main.o
 
 kernel: linker.ld $(OBJECTS)

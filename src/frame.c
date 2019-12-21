@@ -1,10 +1,11 @@
 #include <stddef.h>
 #include <stdalign.h>
+#include <string.h>
 #include "frame.h"
 #include "interrupts.h"
 #include "memory.h"
 
-alignas(0x1000) struct free_frame
+struct free_frame
 {
     union {
         struct free_frame *nextFreePage;
@@ -45,10 +46,7 @@ linear_address frame_alloc()
 linear_address frame_alloc_zero()
 {
     struct free_frame *frame = frame_alloc_internal();
-    for (int i = 0; i < 0x1000; i++)
-    {
-        frame->memory[i] = 0;
-    }
+    memset(frame,0, 0x1000);
     return pointerToLinearAddres(frame);
 }
 
