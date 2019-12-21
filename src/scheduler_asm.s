@@ -3,7 +3,11 @@
  * case 2. I'm in the scheduler, and I want to switch to the next useful task
  * case 3. I'm preempted, and I need to switch to the scheduler task
  */
-
+.global asm_get_cpuid
+asm_get_cpuid:
+    // (TODO)
+    mov $0, %rax
+    ret
 // interrupt calling convention
 .global asm_reschedule
 asm_reschedule:
@@ -13,8 +17,9 @@ asm_reschedule:
     push %rax
     push %rbx
     // do the magic
-    // this will put the thread id in %rbx (TODO)
-    mov $0, %rbx
+    // this will put the thread id in %rbx
+    call asm_get_cpuid
+    mov %rax, %rbx
     // point %rbx to the start of current_task
     mov $current_task_table, %rax
     mov (%rax,%rbx, 0x8), %rax
@@ -81,6 +86,9 @@ asm_reschedule:
     // load rbp
     pop %rbx
     mov %rbx, 0x0(%rbp)
+    // before loading RAX i use RAX to load CR3
+    mov 0xa8(%rax), %rax
+    mov %rax, %cr3
     pop %rax
     pop %rbx
     pop %rcx
