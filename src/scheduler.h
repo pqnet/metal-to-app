@@ -1,16 +1,19 @@
 #include <assert.h>
 #include <stdalign.h>
 #include <stdint.h>
+#include "memory.h"
 
-struct task {
+#define TASK_FLAG_MASK_CAN_EXECUTE 1UL
+
+struct task
+{
     alignas(16)
-    uint64_t SS;
-    void* RSP;
+        uint64_t SS;
+    void *RSP;
     uint64_t RFLAGS;
     uint64_t CS;
-    void* RIP;
-    // no hole
-    void* rbp;
+    void *RIP;
+    void *rbp;
     uint64_t rax;
     uint64_t rbx;
     uint64_t rcx;
@@ -25,18 +28,29 @@ struct task {
     uint64_t r13;
     uint64_t r14;
     uint64_t r15;
-    uint64_t scheduler_info[2];
+    uint64_t task_flags;
+    linear_address address_space;
 };
-static_assert ( sizeof (struct task) == 0xb0, "Wrong interrupt frame size");
+static_assert(sizeof(struct task) == 0xb0, "Wrong interrupt frame size");
 
-struct task* make_task (
-    struct task* task,
-    void* stack,
-    void (*entry)(void*),
-    void* arg,
-    void(*cleanup)(void*,struct task*, uint64_t),
-    void* cleanup_arg);
+struct task *make_task(
+    struct task *task,
+    void *stack,
+    void (*entry)(void *),
+    void *arg,
+    void (*cleanup)(void *, struct task *, uint64_t),
+    void *cleanup_arg,
+    linear_address address_space);
 
-struct task* schedule(int priority, struct task* task, uint64_t flags);
+struct scheduling_entry
+{
+    alignas(16) uint64_t flags;
+    struct task *task;
+};
+static_assert(alignof(struct scheduling_entry) == 16, "scheduling entry should be aligned to 16 byte boundaries");
+static_assert(sizeof(struct scheduling_entry) == 16, "scheduling entry should be tighly packed");
+
+struct scheduling_entry schedule(int priority, struct task *task, uint64_t flags);
 void init_scheduler();
 void yield();
+void suspend();

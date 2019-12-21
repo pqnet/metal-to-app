@@ -4,19 +4,10 @@
 #include <stddef.h>
 
 #include "interrupts.h"
-
-struct scheduling_entry
-{
-    alignas(16)
-        uint64_t flags;
-    struct task *task;
-};
-static_assert(alignof(struct scheduling_entry) == 16, "scheduling entry should be aligned to 16 byte boundaries");
-static_assert(sizeof(struct scheduling_entry) == 16, "scheduling entry should be tighly packed");
+#include "memory.h"
 
 struct task *current_task_table[16];
 struct scheduling_entry scheduling_vector[16][256];
-
 struct task *get_current_task(uint64_t cpu_id)
 {
     return current_task_table[cpu_id];
@@ -43,44 +34,65 @@ struct task *make_task(
     void (*entry)(void *),
     void *arg,
     void (*cleanup)(void *, struct task *, uint64_t),
-    void *cleanup_arg)
+    void *cleanup_arg,
+    linear_address address_space)
 {
     task->RIP = start_task;
-    task->CS = 0x10;//get_current_task(0)->CS;
+    task->CS = 0x10; //get_current_task(0)->CS;
     task->RFLAGS = default_rflags;
-    task->SS = 0x18;//get_current_task(0)->SS;
+    task->SS = 0x18; //get_current_task(0)->SS;
     task->RSP = stack;
     task->rdi = (uintptr_t)entry;
     task->rsi = (uintptr_t)arg;
     task->rdx = (uintptr_t)cleanup;
     task->rcx = (uintptr_t)cleanup_arg;
     task->r8 = (uintptr_t)task;
+    task->task_flags = TASK_FLAG_MASK_CAN_EXECUTE;
+    task->address_space = address_space ? address_space : kernel_address_space;
     return task;
 }
 
 __attribute__((interrupt)) extern void asm_reschedule(struct interrupt_frame *frame);
+extern uint16_t asm_get_cpuid();
 
+static inline struct task *get_if_can_execute(struct scheduling_entry *entry)
+{
+    if (entry->task != NULL &&
+        (entry->task->task_flags & TASK_FLAG_MASK_CAN_EXECUTE) == TASK_FLAG_MASK_CAN_EXECUTE)
+    {
+        return entry->task;
+    }
+    return NULL;
+}
 struct task *scheduler(uint64_t cpu_id)
 {
     struct scheduling_entry *scheduling_v = &scheduling_vector[cpu_id][0];
     struct task *next_task = NULL;
+    static int16_t round_schedule;
     for (int16_t pos = -128; pos < 0; pos++)
     {
-        next_task = scheduling_v[128 + pos].task;
+        next_task = get_if_can_execute(scheduling_v + 128 + pos);
         if (next_task != NULL)
         {
-            break;
+            return current_task_table[cpu_id] = next_task;
         }
     }
-    if (next_task == 0)
+    for (int16_t pos = round_schedule % 128; pos != (round_schedule + 127) % 128; pos = (pos + 1) % 128)
     {
-        return &idle_loop_task;
+        next_task = get_if_can_execute(scheduling_v + 128 + pos);
+        if (next_task != NULL)
+        {
+            round_schedule = pos + 1;
+            return current_task_table[cpu_id] = next_task;
+        }
     }
-    return next_task;
+
+    return current_task_table[cpu_id] = &idle_loop_task;
 }
 
 void init_scheduler()
 {
+    idle_loop_task.address_space = kernel_address_space;
     current_task_table[0] = &idle_loop_task;
     /*for(int i = 0; i < 16; i++) {
         for (int j = 0; j < 256; j++) {
@@ -89,16 +101,25 @@ void init_scheduler()
     }*/
     load_interrupt_fn(asm_reschedule, 201, trap_gate);
 }
+
 void yield()
 {
-    asm volatile(
-        "sti\n"
-        "int $201\n" ::
-            : "cc");
+    asm volatile("int $201\n" ::
+                     : "cc");
+}
+void suspend()
+{
+    uint16_t cpu_id = asm_get_cpuid();
+    // mark current task as executable
+    struct task *current_task = get_current_task(cpu_id);
+    current_task->task_flags |= TASK_FLAG_MASK_CAN_EXECUTE;
+    current_task->task_flags ^= TASK_FLAG_MASK_CAN_EXECUTE;
+    yield();
 }
 
-struct task* schedule(int priority, struct task* task, uint64_t flags) {
-    struct task* ret = scheduling_vector[0][128 + priority].task;
+struct scheduling_entry schedule(int priority, struct task *task, uint64_t flags)
+{
+    struct scheduling_entry ret = scheduling_vector[0][128 + priority];
     scheduling_vector[0][128 + priority].task = task;
     scheduling_vector[0][128 + priority].flags = flags;
     return ret;

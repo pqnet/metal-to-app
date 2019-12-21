@@ -11,15 +11,18 @@
 #include "memory.h"
 
 noreturn void idle_loop();
-noreturn void idle_loop() {
-    for(;;) {
+noreturn void idle_loop()
+{
+    for (;;)
+    {
         println("Idle loop");
         asm volatile("hlt");
     }
 }
 
-noreturn void cstart(struct multiboot_info* multiboot);
-noreturn void cstart(struct multiboot_info* multiboot) {
+noreturn void cstart(struct multiboot_info *multiboot);
+noreturn void cstart(struct multiboot_info *multiboot)
+{
     createKernelAddressSpace();
     load_exceptions(); // load default CPU exception handlers into IDT
     load_interrupts(); // load hardware interrupt handlers into IDT and configure PIC
@@ -28,7 +31,6 @@ noreturn void cstart(struct multiboot_info* multiboot) {
 
     init_scheduler();
 
-    panic();
-    //test_scheduler();
+    test_scheduler();
     idle_loop();
 }
