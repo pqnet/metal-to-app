@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 // a frame is a 4k physical page
+#define DEFAULT_FRAME_SIZE 0x1000
 uintptr_t frame_alloc();
 uintptr_t frame_alloc_zero();
 void frame_dealloc(uintptr_t frame_address);
