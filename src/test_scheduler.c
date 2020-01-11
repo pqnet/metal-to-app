@@ -20,7 +20,6 @@ alignas(16) uint64_t stack3[0x200];
 
 noreturn void run_scheduler(void *arg)
 {
-    schedule(1, &task1, 0);
     schedule(2, &task2, 0);
     schedule(3, &task3, 0);
     for (;;)
@@ -52,10 +51,12 @@ void test_scheduler()
         task1_data,
         task_stack_ptr,
         &print_task,
-        "hello task 1",
+        "hello dynamic task 1 ",
         NULL,
         NULL,
         pointerToLinearAddres(task1_mem));
+    schedule(1, task1_data, 0);
+
     make_task(
         &task2,
         stack2 + sizeof(stack2),
