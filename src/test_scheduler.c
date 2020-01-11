@@ -46,7 +46,7 @@ void test_scheduler()
     struct pagetable_entry *task1_mem = create_address_space();
     void *task_stack_ptr = (void *)0x40000000;
     linear_address task1_stack = frame_alloc_zero();
-    mmap(task1_mem, task1_stack, (char *)task_stack_ptr - DEFAULT_FRAME_SIZE);
+    mmap(task1_mem, task1_stack, (char *)task_stack_ptr - DEFAULT_FRAME_SIZE, true);
 
     make_task(
         task1_data,

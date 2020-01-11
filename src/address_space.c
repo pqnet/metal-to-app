@@ -49,12 +49,13 @@ struct pagetable_entry *resolve_pageentry(struct pagetable_entry *root, uint64_t
     return l1_entry;
 }
 
-void mmap(struct pagetable_entry *pagetable_root, linear_address page_start, void *mapping_start)
+void mmap(struct pagetable_entry *pagetable_root, linear_address page_start, void *mapping_start, bool usermode)
 {
     struct pagetable_entry* entry = resolve_pageentry(pagetable_root, (uint64_t)mapping_start);
     entry->address = page_start;
     entry->present = true;
     entry->writable = true;
+    entry->usermode = usermode;
 }
 
 linear_address munmap(struct pagetable_entry *pagetable_root, void *mapping_start) {
