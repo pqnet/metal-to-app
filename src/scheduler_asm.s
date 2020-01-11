@@ -23,6 +23,8 @@ asm_reschedule:
     // point %rbx to the start of current_task
     mov $current_task_table, %rax
     mov (%rax,%rbx, 0x8), %rax
+    // save frame stack pointer
+    mov %rbp, 0xb0(%rax)
     // stack now points to the end of current_task's registers
     lea 0xa0(%rax), %rsp
     push %r15
@@ -68,6 +70,11 @@ asm_reschedule:
     call scheduler // calling convention: first argument %rdi, return value %rax
     // stack now points to the start of this task
     mov %rax, %rsp
+    // i have to load the new address space into CR3
+    mov 0xa8(%rax), %rbx
+    mov %rbx, %cr3
+    // i have to load the new %rbp from the exception frame
+    mov 0xb0(%rax), %rbp
     // load SS
     pop %rbx
     mov %rbx, 0x28(%rbp)
@@ -86,9 +93,6 @@ asm_reschedule:
     // load rbp
     pop %rbx
     mov %rbx, 0x0(%rbp)
-    // before loading RAX i use RAX to load CR3
-    mov 0xa8(%rax), %rax
-    mov %rax, %cr3
     pop %rax
     pop %rbx
     pop %rcx

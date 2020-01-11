@@ -49,6 +49,7 @@ struct task *make_task(
     task->r8 = (uintptr_t)task;
     task->task_flags = TASK_FLAG_MASK_CAN_EXECUTE;
     task->address_space = address_space ? address_space : kernel_address_space;
+    task->exception_frame_ptr = (char *)stack - sizeof(struct interrupt_frame) - sizeof(void *) - 16;
     return task;
 }
 
