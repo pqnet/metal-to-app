@@ -26,7 +26,7 @@ noreturn void run_scheduler(void *arg)
     for (;;)
     {
         println("I am the scheduler. I run once");
-        suspend();
+        suspend(NULL);
     }
 }
 

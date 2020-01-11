@@ -107,14 +107,26 @@ void yield()
     asm volatile("int $201\n" ::
                      : "cc");
 }
-void suspend()
+void suspend(struct task *suspend_task)
 {
     uint16_t cpu_id = asm_get_cpuid();
-    // mark current task as executable
-    struct task *current_task = get_current_task(cpu_id);
-    current_task->task_flags |= TASK_FLAG_MASK_CAN_EXECUTE;
-    current_task->task_flags ^= TASK_FLAG_MASK_CAN_EXECUTE;
+    if (suspend_task == NULL)
+    {
+        suspend_task = get_current_task(cpu_id);
+    }
+    else
+    {
+        // TODO worry about atomicity when the task may be running on another CPU
+        // and signal that cpu to yield the task after marking it as not executable
+    }
+    suspend_task->task_flags |= TASK_FLAG_MASK_CAN_EXECUTE;
+    suspend_task->task_flags ^= TASK_FLAG_MASK_CAN_EXECUTE;
     yield();
+}
+
+void resume(struct task *resume_task)
+{
+    resume_task->task_flags |= TASK_FLAG_MASK_CAN_EXECUTE;
 }
 
 struct scheduling_entry schedule(int priority, struct task *task, uint64_t flags)

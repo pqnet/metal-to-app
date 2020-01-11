@@ -53,4 +53,5 @@ static_assert(sizeof(struct scheduling_entry) == 16, "scheduling entry should be
 struct scheduling_entry schedule(int priority, struct task *task, uint64_t flags);
 void init_scheduler();
 void yield();
-void suspend();
+void suspend(struct task* task);
+void resume(struct task* task);
