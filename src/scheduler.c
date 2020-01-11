@@ -6,8 +6,12 @@
 #include "interrupts.h"
 #include "memory.h"
 
-struct task *current_task_table[16];
-struct scheduling_entry scheduling_vector[16][256];
+static const uint64_t MAX_SUPPORTED_CPUS = 16;
+
+struct task *current_task_table[MAX_SUPPORTED_CPUS];
+
+struct scheduling_entry scheduling_vector[MAX_SUPPORTED_CPUS][256];
+
 struct task *get_current_task(uint64_t cpu_id)
 {
     return current_task_table[cpu_id];
@@ -80,6 +84,7 @@ struct task *scheduler(uint64_t cpu_id)
     }
     for (int16_t pos = round_schedule % 128; pos != (round_schedule + 127) % 128; pos = (pos + 1) % 128)
     {
+        // TODO grab a task atomically to prevent other threads to run it
         next_task = get_if_can_execute(scheduling_v + 128 + pos);
         if (next_task != NULL)
         {

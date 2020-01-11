@@ -12,6 +12,7 @@ struct free_frame
         uint8_t memory[0x1000];
     };
 };
+// TODO remove freemem_start and freemem_end and use freelist for everything
 struct free_frame *freemem_start;
 struct free_frame *freemem_end; // first non-free address after last page
 struct free_frame *freelist;
@@ -43,6 +44,7 @@ linear_address frame_alloc()
 {
     return pointerToLinearAddres(frame_alloc_internal());
 }
+
 linear_address frame_alloc_zero()
 {
     struct free_frame *frame = frame_alloc_internal();

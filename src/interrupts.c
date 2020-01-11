@@ -59,7 +59,7 @@ static int timerCnt = 0;
 
 __attribute__ ((interrupt))
 void irq0(struct interrupt_frame * frame) {
-    if(timerCnt++ % 92 == 0) { // 1 second == 18.4 ticks
+    if(timerCnt++ % 182 == 0) { // 1 second == 18.2065 ticks
         println("timer");
     }
     eoi(0);
