@@ -7,8 +7,9 @@ FLAGS=-Werror -Wall -g -O2 -nostdlib -static -target $(TARGET)
 CFLAGS=-std=gnu2x -mcmodel=kernel -mno-red-zone -mno-sse
 LINK_FLAGS=-fno-exceptions -fno-unwind-tables -ffreestanding -Wl,-z,max-page-size=0x200000 -Wl,-n -Wl,--build-id=none
 
-$(ISOFILE): kernel iso/boot/grub/grub.cfg
+$(ISOFILE): kernel testelf iso/boot/grub/grub.cfg
 	cp kernel iso
+	cp testelf iso
 	grub-mkrescue -d /usr/lib/grub/i386-pc -o $@ iso
 
 OBJECTS=\
@@ -37,4 +38,10 @@ kernel: linker.ld $(OBJECTS)
 clean:
 	rm -f windows/img.iso
 	rm -f kernel
+	rm -f testelf
 	rm -f src/*.o
+
+
+	
+testelf: modules/testelf/src/testelf.o
+	$(CC) $(FLAGS) $(LINK_FLAGS) $^ -o $@
