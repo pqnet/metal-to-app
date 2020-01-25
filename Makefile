@@ -5,14 +5,14 @@ ISOFILE=windows/img.iso
 TARGET=x86_64-none-elf
 FLAGS=-Werror -Wall -g -O2 -nostdlib -static -target $(TARGET)
 CFLAGS=-std=gnu2x -mcmodel=kernel -mno-red-zone -mno-sse
-LINK_FLAGS=-fno-exceptions -fno-unwind-tables -ffreestanding -z max-page-size=0x200000 -Wl,-n -Wl,--build-id=none
+LINK_FLAGS=-fno-exceptions -fno-unwind-tables -ffreestanding -Wl,-z,max-page-size=0x200000 -Wl,-n -Wl,--build-id=none
 
 $(ISOFILE): kernel iso/boot/grub/grub.cfg
 	cp kernel iso
 	grub-mkrescue -d /usr/lib/grub/i386-pc -o $@ iso
 
 OBJECTS=\
-src/memset.o src/multiboot.o\
+src/memset.o src/memcpy.o src/multiboot.o\
 src/bootstrap.o src/interrupts.o src/print.o\
 src/exceptions.o src/keyboard.o src/scancodes.o\
 src/scheduler.o src/scheduler_asm.o src/test_scheduler.o\
