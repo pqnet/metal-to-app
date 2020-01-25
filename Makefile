@@ -5,7 +5,9 @@ ISOFILE=windows/img.iso
 TARGET=x86_64-none-elf
 FLAGS=-Werror -Wall -g -O2 -nostdlib -static -target $(TARGET)
 CFLAGS=-std=gnu2x -mcmodel=kernel -mno-red-zone -mno-sse
-LINK_FLAGS=-fno-exceptions -fno-unwind-tables -ffreestanding -Wl,-z,max-page-size=0x200000 -Wl,-n -Wl,--build-id=none
+
+# -Wl,-z,max-page-size=0x200000
+LINK_FLAGS=-fno-exceptions -fno-unwind-tables -ffreestanding -Wl,-n -Wl,--build-id=none
 
 $(ISOFILE): kernel testelf iso/boot/grub/grub.cfg
 	cp kernel iso
