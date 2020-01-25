@@ -27,7 +27,17 @@ void start_task(
     struct task *task)
 {
     uint64_t res = entry(arg);
-    cleanup(cleanup_arg, task, res);
+    if (cleanup != NULL)
+    {
+        cleanup(cleanup_arg, task, res);
+    }
+    else
+    {
+        while (true)
+        {
+            suspend(NULL);
+        }
+    }
 }
 
 uint64_t default_rflags = 0x246; // TODO

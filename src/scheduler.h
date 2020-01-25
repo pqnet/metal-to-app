@@ -1,3 +1,5 @@
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
 #include <assert.h>
 #include <stdalign.h>
 #include <stdint.h>
@@ -58,3 +60,5 @@ void init_scheduler();
 void yield();
 void suspend(struct task* task);
 void resume(struct task* task);
+
+#endif // SCHEDULER_H
