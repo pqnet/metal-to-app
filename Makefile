@@ -14,6 +14,7 @@ $(ISOFILE): kernel testelf iso/boot/grub/grub.cfg
 
 OBJECTS=\
 src/memset.o src/memcpy.o src/multiboot.o\
+src/initrd.o src/elf.o\
 src/bootstrap.o src/interrupts.o src/print.o\
 src/exceptions.o src/keyboard.o src/scancodes.o\
 src/scheduler.o src/scheduler_asm.o src/test_scheduler.o\
