@@ -1,5 +1,7 @@
 #ifndef PRINT_H
 #define PRINT_H
+#include <stdint.h>
+
 extern void print(char message[]);
 extern void println(char message[]);
 
