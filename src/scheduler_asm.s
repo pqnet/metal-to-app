@@ -109,5 +109,9 @@ asm_reschedule:
     pop %r15
     // magic is done, let's go back to sanity
     mov %rbp, %rsp
+    mov %rax, %rbp
+    mov 0x28(%rsp), %rax
+    mov %rax, %ds
+    mov %rbp, %rax
     pop %rbp
     iretq
