@@ -42,14 +42,14 @@ static inline struct free_frame *frame_alloc_internal()
 
 linear_address frame_alloc()
 {
-    return pointerToLinearAddres(frame_alloc_internal());
+    return pointerToLinearAddress(frame_alloc_internal());
 }
 
 linear_address frame_alloc_zero()
 {
     struct free_frame *frame = frame_alloc_internal();
     memset(frame,0, 0x1000);
-    return pointerToLinearAddres(frame);
+    return pointerToLinearAddress(frame);
 }
 
 void frame_dealloc(linear_address frame_address)
