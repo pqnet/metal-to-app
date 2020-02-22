@@ -16,15 +16,17 @@ $(ISOFILE): kernel testelf iso/boot/grub/grub.cfg
 
 OBJECTS=\
 src/memset.o src/memcpy.o src/multiboot.o\
-src/initrd.o src/elf.o\
+src/initrd.o src/elf.o src/userspace.o\
 src/bootstrap.o src/interrupts.o src/print.o\
 src/exceptions.o src/keyboard.o src/scancodes.o\
 src/scheduler.o src/scheduler_asm.o src/test_scheduler.o\
 src/frame.o src/memory.o src/address_space.o\
+src/tss.o\
 src/main.o
 
-kernel: linker.ld $(OBJECTS)
-	$(CC) $(FLAGS) $(LINK_FLAGS) -Wl,-T,$^ -o $@
+kernel: linker.ld $(OBJECTS) testelf
+	$(CC) $(FLAGS) $(LINK_FLAGS) -Wl,-T,linker.ld $(OBJECTS) -o $@
+	objcopy --add-gnu-debuglink=testelf kernel
 	grub-file --is-x86-multiboot $@
 
 %.o: %.s
