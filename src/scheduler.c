@@ -106,25 +106,10 @@ struct task *scheduler(uint64_t cpu_id)
     return current_task_table[cpu_id] = &idle_loop_task;
 }
 
-void init_scheduler()
+__attribute__((interrupt)) void ih_suspend(struct interrupt_frame *frame)
 {
-    idle_loop_task.address_space = kernel_address_space;
-    current_task_table[0] = &idle_loop_task;
-    /*for(int i = 0; i < 16; i++) {
-        for (int j = 0; j < 256; j++) {
-            scheduling_vector[i][j] = NULL;
-        }
-    }*/
-    load_interrupt_fn(asm_reschedule, 201, trap_gate);
-}
+    struct task *suspend_task = *(struct task**)((char*)frame->RSP+8);
 
-void yield()
-{
-    asm volatile("int $201\n" ::
-                     : "cc");
-}
-void suspend(struct task *suspend_task)
-{
     uint16_t cpu_id = asm_get_cpuid();
     if (suspend_task == NULL)
     {
@@ -138,6 +123,34 @@ void suspend(struct task *suspend_task)
     suspend_task->task_flags |= TASK_FLAG_MASK_CAN_EXECUTE;
     suspend_task->task_flags ^= TASK_FLAG_MASK_CAN_EXECUTE;
     yield();
+}
+
+void init_scheduler()
+{
+    idle_loop_task.address_space = kernel_address_space;
+    current_task_table[0] = &idle_loop_task;
+    /*for(int i = 0; i < 16; i++) {
+        for (int j = 0; j < 256; j++) {
+            scheduling_vector[i][j] = NULL;
+        }
+    }*/
+    load_interrupt_fn(asm_reschedule, 201, trap_gate);
+    load_interrupt_fn(ih_suspend, 202, trap_gate);
+    //load_interrupt_fn(ih_kill, 203, trap_gate);
+}
+
+void yield()
+{
+    asm volatile("int $201\n" ::
+                     : "cc");
+}
+void suspend(struct task *suspend_task)
+{
+    asm volatile(
+        "push %1\n"
+        "int $202\n"
+        "pop %0\n" :"=r"(suspend_task):"r"(suspend_task)
+            : "cc");
 }
 
 void resume(struct task *resume_task)
