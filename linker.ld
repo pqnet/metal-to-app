@@ -27,8 +27,7 @@ SECTIONS {
     . = KERNEL_BASE + .RO_END;
     .bss0 : {
         .stack_top = .;
-        . += 0x3ffff8;
-        . += 0x000008;
+        . += 0x400000;
         .stack_bottom = .;
     }
     . = KERNEL_BASE + .DATA_END;
