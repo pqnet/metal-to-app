@@ -54,7 +54,7 @@ void test_scheduler()
         "hello dynamic task 1 ",
         NULL,
         NULL,
-        pointerToLinearAddres(task1_mem));
+        pointerToLinearAddress(task1_mem));
     schedule(1, task1_data, 0);
 
     make_task(

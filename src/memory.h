@@ -33,7 +33,7 @@ void createKernelAddressSpace();
 extern linear_address kernel_address_space;
 
 void* linearAddressToPtr(linear_address a);
-linear_address pointerToLinearAddres(void* ptr);
+linear_address pointerToLinearAddress(void* ptr);
 
 void init_address_space(struct pagetable_entry root_pagetable[]);
 

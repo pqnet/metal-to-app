@@ -35,11 +35,12 @@ _start:
     // load new GDT
     mov $GDTR, %eax
     lgdtl (%eax)
-    mov $(DS32 - GDT), %ax
-    movw %ax, %ds
+    xor %ax, %ax
     movw %ax, %es
     movw %ax, %fs
     movw %ax, %gs
+    mov $(DS32 - GDT), %ax
+    movw %ax, %ds
     movw %ax, %ss
     jmpl $(CS64 - GDT),$bootstrap64
 .code64
@@ -73,13 +74,22 @@ GDT:
 // first descriptor in GDT is not used
 .quad 0
 CS32:
-// type code/data  presence limit 64bit
 .int 0xffff, 8<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
+.globl CS64U;
+CS64U:
+.int 0xffff, 8<<8 + 1<<12 + 3<<13 + 1<<15 + 0xf <<16 + 1<<21 + 1<<23
 .globl CS64;
 CS64:
-.int 0xffff, 8<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<21 + 1<<23
+.int 0xffff, 8<<8 + 1<<12 + 0<<13 + 1<<15 + 0xf <<16 + 1<<21 + 1<<23
+.globl DS32U;
 DS32: 
 .int 0xffff, 2<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
+.globl DS32U;
+DS32U: 
+.int 0xffff, 2<<8 + 1<<12 + 3<<13 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
+.globl TSSD;
+TSSD:
+.quad 0,0
 .align 0x1000,0
 //.quad 0,0,0,0
 ENDGDT:
@@ -109,6 +119,27 @@ IDTR:
 .int IDT
 .int 0xffff8000
 
+.align 0x8,0
+.globl TSS
+TSS:
+.int 0 // reserved
+.quad 0 // rsp0
+.quad 0 // rsp1
+.quad 0 // rsp2
+.int 0 // reserved
+.int 0 // reserved
+.globl IST
+IST:
+.quad 0 // ist1
+.quad 0 // ist2
+.quad 0 // ist3
+.quad 0 // ist4
+.quad 0 // ist5
+.quad 0 // ist6
+.quad 0 // ist7
+.int 0 // reserved
+.int 0 // reserved
+
 // page tables
 .align 0x1000,0
 .globl PML4
@@ -117,7 +148,7 @@ PML4:
 .rept 510
 .quad 0
 .endr
-.quad PDPT2 + 1 + 2 // last 512 gb
+.quad PDPT2 + 1 + 2 + 4// last 512 gb
 .align 0x1000,0
 .globl PDPT
 PDPT: // covers first 512 gb of addresses
@@ -128,18 +159,18 @@ PDPT2: // covers last 512 gb of addresses
 .rept 510
 .quad 0
 .endr
-.quad PD + 1 + 2 // 1gb 
+.quad PD + 1 + 2 + 4// 1gb 
 .align 0x1000,0
 .globl PD
 PD: // covers 1 gb of addresses
-.quad 0x0 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 0x1 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 0x2 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 0x3 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 0x4 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 0x5 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 0x6 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
-.quad 0x7 * 0x200000 + 1 + 0 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x0 * 0x200000 + 1 + 2 + 4 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x1 * 0x200000 + 1 + 0 + 4 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x2 * 0x200000 + 1 + 0 + 4 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x3 * 0x200000 + 1 + 0 + 4 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x4 * 0x200000 + 1 + 0 + 4 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x5 * 0x200000 + 1 + 0 + 4 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x6 * 0x200000 + 1 + 0 + 4 + 0 + 0 + 0 + 0 + 1<<7 + 0
+.quad 0x7 * 0x200000 + 1 + 0 + 4 + 0 + 0 + 0 + 0 + 1<<7 + 0
 .quad 0x8 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
 .quad 0x9 * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0
 .quad 0xa * 0x200000 + 1 + 2 + 0 + 0 + 0 + 0 + 0 + 1<<7 + 0

@@ -20,6 +20,7 @@ struct pagetable_entry *resolve_pageentry(struct pagetable_entry *root, uint64_t
         l4_entry->address = frame_alloc_zero();
         l4_entry->present = true;
         l4_entry->writable = true;
+        l4_entry->usermode= true;
     }
     struct pagetable_entry *l3_entry =
         (struct pagetable_entry *)linearAddressToPtr((l4_entry->address >> 12) << 12) + l3_entry_idx;
@@ -31,6 +32,7 @@ struct pagetable_entry *resolve_pageentry(struct pagetable_entry *root, uint64_t
         l3_entry->address = frame_alloc_zero();
         l3_entry->present = true;
         l3_entry->writable = true;
+        l3_entry->usermode = true;
     }
     struct pagetable_entry *l2_entry =
         (struct pagetable_entry *)linearAddressToPtr((l3_entry->address >> 12) << 12) + l2_entry_idx;
@@ -42,6 +44,7 @@ struct pagetable_entry *resolve_pageentry(struct pagetable_entry *root, uint64_t
         l2_entry->address = frame_alloc_zero();
         l2_entry->present = true;
         l2_entry->writable = true;
+        l2_entry->usermode = true;
     }
     struct pagetable_entry *l1_entry =
         (struct pagetable_entry *)linearAddressToPtr((l2_entry->address >> 12) << 12) + l1_entry_idx;
