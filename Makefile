@@ -22,6 +22,7 @@ src/exceptions.o src/keyboard.o src/scancodes.o\
 src/scheduler.o src/scheduler_asm.o src/test_scheduler.o\
 src/frame.o src/memory.o src/address_space.o\
 src/tss.o\
+src/syscall_asm.o src/syscall.o src/syscall_table.o\
 src/main.o
 
 kernel: linker.ld $(OBJECTS) testelf
@@ -45,8 +46,9 @@ clean:
 	rm -f kernel
 	rm -f testelf
 	rm -f src/*.o
+	rm -f modules/*/src/*.o
 
 
 	
-testelf: modules/testelf/src/testelf.o
+testelf: modules/testelf/src/testelf.o modules/vdso/src/vdso.o
 	$(CC) $(FLAGS) $(LINK_FLAGS) $^ -o $@

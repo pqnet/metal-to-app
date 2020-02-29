@@ -15,8 +15,9 @@
 #include "frame.h"
 #include "scheduler.h"
 #include "userspace.h"
-
 #include "tss.h"
+
+#include "syscall.h"
 
 noreturn void idle_loop();
 noreturn void idle_loop()
@@ -41,6 +42,7 @@ noreturn void cstart(struct multiboot_info *multiboot)
     setup_frame_allocator(multiboot);
 
     init_scheduler();
+    setup_syscall();
     
     struct initrd_info m;
     setup_initrd(multiboot,&m);
