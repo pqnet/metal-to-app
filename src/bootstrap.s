@@ -25,7 +25,8 @@ _start:
     // enable long mode addressing
     mov $0xC0000080, %ecx // EFER MSR address 
     rdmsr
-    orl $1 << 8, %eax
+    // 1 << 8 LME, 1<< 0 SCE
+    orl $1 + (1<<8), %eax
     wrmsr
     // enable paging
     mov %cr0, %eax
@@ -69,26 +70,33 @@ go32:
 
 .section .data, "w"
 .align 0x1000,0
-.globl GDT;
 GDT:
+.global GDT;
 // first descriptor in GDT is not used
 .quad 0
+// This is only used during bootstrap
 CS32:
-.int 0xffff, 8<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
-.globl CS64U;
-CS64U:
-.int 0xffff, 8<<8 + 1<<12 + 3<<13 + 1<<15 + 0xf <<16 + 1<<21 + 1<<23
-.globl CS64;
+//.global CS32
+.int 0xffff, 10<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
+// Order of these segments must be preserved, so that SYSCALL works
 CS64:
-.int 0xffff, 8<<8 + 1<<12 + 0<<13 + 1<<15 + 0xf <<16 + 1<<21 + 1<<23
-.globl DS32U;
-DS32: 
+.global CS64
+.int 0xffff, 10<<8 + 1<<12 + 0<<13 + 1<<15 + 0xf <<16 + 1<<21 + 1<<23
+DS32:
+//.global DS32
 .int 0xffff, 2<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
-.globl DS32U;
-DS32U: 
+// Order of these segments must be preserved, so that SYSRET works
+CS32U:
+.global CS32U
+.int 0xffff, 10<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
+DS32U:
+.global DS32U
 .int 0xffff, 2<<8 + 1<<12 + 3<<13 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
-.globl TSSD;
+CS64U:
+.global CS64U
+.int 0xffff, 10<<8 + 1<<12 + 3<<13 + 1<<15 + 0xf <<16 + 1<<21 + 1<<23
 TSSD:
+.global TSSD
 .quad 0,0
 .align 0x1000,0
 //.quad 0,0,0,0
