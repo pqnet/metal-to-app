@@ -48,9 +48,16 @@ __attribute__ ((interrupt))
 void page_fault(struct interrupt_frame * frame, uint64_t error_code) {
     print("Page fault code 0x");
     printhex(error_code);
+
+    print(", address 0x");
+    uint64_t cr2;
+    asm volatile("mov %%cr2, %0": "=r"(cr2));
+    printhex(cr2);
+
     print(", instruction: 0x");
     printhex((uintptr_t)frame->RIP);
     println("");
+
     // no need to loop here, because interrupts are disabled as this is set as interrupt gate
     asm volatile ("hlt");
 }
