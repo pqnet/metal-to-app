@@ -35,7 +35,7 @@ void start_task(
     {
         while (true)
         {
-            suspend(NULL);
+            yield();
         }
     }
 }
@@ -106,9 +106,8 @@ struct task *scheduler(uint64_t cpu_id)
     return current_task_table[cpu_id] = &idle_loop_task;
 }
 
-__attribute__((interrupt)) void ih_suspend(struct interrupt_frame *frame)
+void suspend(struct task *suspend_task)
 {
-    struct task *suspend_task = *(struct task**)((char*)frame->RSP+8);
 
     uint16_t cpu_id = asm_get_cpuid();
     if (suspend_task == NULL)
@@ -135,22 +134,12 @@ void init_scheduler()
         }
     }*/
     load_interrupt_fn(asm_reschedule, 201, trap_gate);
-    load_interrupt_fn(ih_suspend, 202, trap_gate);
-    //load_interrupt_fn(ih_kill, 203, trap_gate);
 }
 
 void yield()
 {
     asm volatile("int $201\n" ::
                      : "cc");
-}
-void suspend(struct task *suspend_task)
-{
-    asm volatile(
-        "push %1\n"
-        "int $202\n"
-        "pop %0\n" :"=r"(suspend_task):"r"(suspend_task)
-            : "cc");
 }
 
 void resume(struct task *resume_task)
