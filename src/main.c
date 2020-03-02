@@ -24,8 +24,9 @@ noreturn void idle_loop()
 {
     for (;;)
     {
-        println("Idle loop");
-        asm volatile("hlt");
+        asm volatile(
+            "int $201\n"
+            "hlt");
     }
 }
 
@@ -45,19 +46,14 @@ noreturn void cstart(struct multiboot_info *multiboot)
     // load_idt();
     enable_interrupts();
 
-
     init_scheduler();
     setup_syscall();
-    
+
     struct initrd_info m;
-    setup_initrd(multiboot,&m);
+    setup_initrd(multiboot, &m);
 
-    struct task* initrd_task =  make_userspace_process(m.start,m.end);
-    schedule(0,initrd_task, 0);
-    
+    struct task *initrd_task = make_userspace_process(m.start, m.end);
+    schedule(0, initrd_task, 0);
 
-    yield();
-    
-    // test_scheduler();
     idle_loop();
 }

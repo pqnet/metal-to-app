@@ -40,32 +40,16 @@ _start:
     movw %ax, %es
     movw %ax, %fs
     movw %ax, %gs
-    mov $(DS32 - GDT), %ax
-    movw %ax, %ds
-    movw %ax, %ss
+    // long jump will effectively go to 64 bit
     jmpl $(CS64 - GDT),$bootstrap64
 .code64
 bootstrap64:
     mov MULTIBOOT_INFO, %rdi
     lea KERNEL_BASE(%rdi), %rdi
-    mov $.stack_bottom, %rbp
+    mov $STACK_BOTTOM, %rbp
     mov %rbp, %rsp
-    // load new IDT
-/*    mov $IDTR, %rax
-    lidt (%rax)
-    mov $GDTR, %rax
-    lgdt (%rax)*/
     movabs $cstart, %rbx
     call *%rbx
-go32:
-    // disable interrupts
-    cli
-    // disable paging
-    mov %cr0, %rax
-    mov $0xffffffff7fffffff, %rbx
-    andq %rbx, %rax
-    mov %rax, %cr0
-.code32
     hlt
 
 .section .data, "w"
@@ -79,63 +63,13 @@ CS32:
 // Order of these segments must be preserved, so that SYSCALL works
 CS64:
 .int 0xffff, 10<<8 + 1<<12 + 0<<13 + 1<<15 + 0xf <<16 + 1<<21 + 1<<23
-DS32:
-.int 0xffff, 2<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
-// Order of these segments must be preserved, so that SYSRET works
-CS32U:
-.int 0xffff, 10<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
-DS32U:
-.int 0xffff, 2<<8 + 1<<12 + 3<<13 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
-CS64U:
-.int 0xffff, 10<<8 + 1<<12 + 3<<13 + 1<<15 + 0xf <<16 + 1<<21 + 1<<23
-TSSD:
-.quad 0,0
-.align 0x1000,0
-//.quad 0,0,0,0
 ENDGDT:
-IDT:
-.rept 256
-.int 0, 0, 0, 0
-.endr
-ENDIDT:
-.align 0x1000,0
-
-// align the GDTR to the second word of the second int
-.align 8
-.int 0
+// align the GDTR to the second word
+.align 4
 .short 0
 GDTR:
 .short (ENDGDT - GDT) - 1
 .int GDT
-.int 0xffff8000
-
-// align the IDTR to the second word of the second int
-.align 8
-.int 0
-.short 0
-IDTR:
-.short (ENDIDT - IDT) - 1
-.int IDT
-.int 0xffff8000
-
-.align 0x8,0
-TSS:
-.int 0 // reserved
-.quad 0 // rsp0
-.quad 0 // rsp1
-.quad 0 // rsp2
-.int 0 // reserved
-.int 0 // reserved
-IST:
-.quad 0 // ist1
-.quad 0 // ist2
-.quad 0 // ist3
-.quad 0 // ist4
-.quad 0 // ist5
-.quad 0 // ist6
-.quad 0 // ist7
-.int 0 // reserved
-.int 0 // reserved
 
 // page tables
 .align 0x1000,0
@@ -144,16 +78,15 @@ PML4:
 .rept 510
 .quad 0
 .endr
-.quad PDPT2 + 1 + 2 + 4// last 512 gb
+.quad PDPT2 + 1 + 2 // last 512 gb
 .align 0x1000,0
 PDPT: // covers first 512 gb of addresses
-.quad PD + 1 + 2
-.align 0x1000,0
 PDPT2: // covers last 512 gb of addresses
-.rept 510
+.quad PD + 1 + 2
+.rept 509
 .quad 0
 .endr
-.quad PD + 1 + 2 + 4// 1gb 
+.quad PD + 1 + 2
 .align 0x1000,0
 PD: // covers 1 gb of addresses
 .quad 0x0 * 0x200000 + 1 + 2 + 4 + 0 + 0 + 0 + 0 + 1<<7 + 0

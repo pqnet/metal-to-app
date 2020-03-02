@@ -125,8 +125,9 @@ void load_gdt()
       : "rax", "memory");
 }
 
+extern char STACK_BOTTOM[];
 void load_tss()
 {
-  tss.ist1 = linearAddressToPtr(frame_alloc_zero());
+  tss.ist1 = &STACK_BOTTOM;
   start_tss(offsetof(struct GDT, tss));
 }
