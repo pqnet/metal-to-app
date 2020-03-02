@@ -4,9 +4,18 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Make",
+      "label": "Make test",
       "type": "shell",
-      "command": "make",
+      "command": "make test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Make bin",
+      "type": "shell",
+      "command": "make bin",
       "group": {
         "kind": "build",
         "isDefault": true

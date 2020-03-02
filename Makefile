@@ -9,6 +9,9 @@ CFLAGS=-fno-asynchronous-unwind-tables -std=gnu2x -mcmodel=kernel -mno-red-zone 
 
 LINK_FLAGS=-fno-exceptions -fno-unwind-tables -ffreestanding -Wl,-n -Wl,--build-id=none
 
+iso: $(ISOFILE)
+bin: kernel testelf
+
 $(ISOFILE): kernel testelf iso/boot/grub/grub.cfg
 	cp kernel iso
 	cp testelf iso
@@ -70,3 +73,4 @@ $(DEPDIR):
 	@mkdir $@
 
 -include $(DEPFILES)
+-include run.make
