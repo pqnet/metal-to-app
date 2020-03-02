@@ -3,7 +3,7 @@ CC=clang-9
 ISOFILE=windows/img.iso
 
 TARGET=x86_64-none-elf
-FLAGS=-Werror -Wall -Os -nostdlib -static -target $(TARGET)
+FLAGS=-Werror -Wall -O2 -g -nostdlib -static -target $(TARGET)
 ARCH_DIR=src/arch/x86_64/
 CFLAGS=-fno-asynchronous-unwind-tables -std=gnu2x -mcmodel=kernel -mno-red-zone -mno-sse -I./src -I./$(ARCH_DIR)
 
