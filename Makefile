@@ -24,26 +24,30 @@ exceptions.c\
 gdt.c\
 )
 ARCH_OBJECTS=$(ARCH_SRCS:%.c=%.o)
+
 SRCS=\
-src/memset.c src/memcpy.c \
 src/initrd.c src/elf.c src/userspace.c\
 src/bootstrap.c src/print.c\
 src/keyboard.c src/scancodes.c\
-src/scheduler.c src/scheduler_asm.s src/test_scheduler.c\
+src/scheduler.c src/scheduler_asm.s\
 src/frame.c src/memory.c src/address_space.c\
 src/syscall_asm.c src/syscall.c src/syscall_table.c\
 src/main.c
 OBJECTS=$(patsubst %.s, %.o, $(SRCS:.c=.o))
 
-kernel: linker.ld $(OBJECTS) $(ARCH_OBJECTS) testelf
-	$(CC) $(FLAGS) $(LINK_FLAGS) -Wl,-T,linker.ld $(OBJECTS) $(ARCH_OBJECTS) -o $@
+KLIB_SRCS=\
+src/klib/memset.c src/klib/memcpy.c src/klib/strlen.c
+KLIB_OBJECTS=$(patsubst %.s, %.o, $(KLIB_SRCS:.c=.o))
+
+kernel: linker.ld $(OBJECTS) $(ARCH_OBJECTS) $(KLIB_OBJECTS) testelf
+	$(CC) $(FLAGS) $(LINK_FLAGS) -Wl,-T,linker.ld $(OBJECTS) $(ARCH_OBJECTS) $(KLIB_OBJECTS) -o $@
 	# objcopy --add-gnu-debuglink=testelf kernel
 	grub-file --is-x86-multiboot $@
 
 .PHONY: clean
 
 DEPDIR:=.deps
-DEPFILES:=$(patsubst %,$(DEPDIR)/%,$(notdir $(filter-out %.s,$(SRCS:%.c=/%.d))))
+DEPFILES:=$(patsubst %,$(DEPDIR)/%,$(notdir $(filter-out %.s,$(SRCS:%.c=/%.d) $(ARCH_SRCS:%.c=/%.d) $(KLIB_SRCS:%.c=/%.d))))
 
 clean:
 	rm -f windows/img.iso
