@@ -17,10 +17,12 @@ enum gate_type {
     interrupt_gate = 14,
     trap_gate = 15,
 };
+
 void load_interrupt_fn(void(*fnAddr)(struct interrupt_frame* frame),unsigned entry_no, enum gate_type type);
 static inline void load_interrupt_fn_error(void(*fnAddr)(struct interrupt_frame* frame, uint64_t error_code),unsigned entry_no, enum gate_type type) {
     load_interrupt_fn((void(*)(struct interrupt_frame* frame))fnAddr,entry_no, type);
 };
+
 void load_interrupts();
 void enable_interrupts();
 

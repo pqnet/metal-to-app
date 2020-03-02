@@ -1,42 +1,28 @@
+#include "interrupts.h"
+
 #include <stdint.h>
 #include <string.h>
+#include <stdalign.h>
+
 #include "print.h"
-#include "interrupts.h"
 #include "exceptions.h"
 #include "portio.h"
+#include "idt.h"
+#include "gdt.h"
 
-extern char IDT[1];
+alignas(0x1000) struct idt_entry idt[256];
 extern char KERNEL_BASE[1];
-extern char CS64[1];
-extern char GDT[1];
-
-struct idt_entry
-{
-    unsigned offset_lo : 16;
-    unsigned segment_sel : 16;
-    unsigned ist : 3;
-    unsigned _padding1 : 5;
-    unsigned type : 4;
-    unsigned _padding2 : 1;
-    unsigned dpl : 2;
-    unsigned present : 1;
-    unsigned offset_mid : 16;
-    unsigned offset_high : 32;
-    unsigned _reserved : 32;
-};
-_Static_assert((16 == sizeof(struct idt_entry)), "Wrong idt entry size");
 
 void load_interrupt_fn(void (*fnAddr)(struct interrupt_frame *), unsigned entry_no, enum gate_type type)
 {
-    struct idt_entry *entry = (void *)IDT + (uintptr_t)KERNEL_BASE;
-    entry += entry_no;
+    struct idt_entry *entry = idt + entry_no;
     memset(entry, 0, sizeof(struct idt_entry));
     uintptr_t offset = (uintptr_t)fnAddr;
     entry->offset_lo = offset & 0xffff;
     entry->offset_mid = (offset >> 16) & 0xffff;
     entry->offset_high = (offset >> 32) & 0xffffffff;
     entry->type = type;
-    entry->segment_sel = &CS64 - &GDT;
+    entry->segment_sel = (char *)&gdt.CS64 - (char *)&gdt;
     entry->ist = 1;
     entry->dpl = 3; // descriptor privilege level. 3 = can be called from userspace
     entry->present = 1;
@@ -161,10 +147,15 @@ void enable_interrupts()
     outb(0x21, 0xff);
     outb(0xA1, 0xff);
 
-    asm volatile("sti"
-                 :
-                 :
-                 : "cc");
+    struct descriptor_register idtr;
+    idtr.base = &idt;
+    idtr.size = sizeof(idt);
+    asm volatile(
+        "lidt (%0)\n"
+        "sti\n"
+        :
+        : "r"(&idtr.size)
+        : "cc");
 }
 
 void load_interrupts()

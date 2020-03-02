@@ -51,10 +51,10 @@ bootstrap64:
     mov $.stack_bottom, %rbp
     mov %rbp, %rsp
     // load new IDT
-    mov $IDTR, %rax
+/*    mov $IDTR, %rax
     lidt (%rax)
     mov $GDTR, %rax
-    lgdt (%rax)
+    lgdt (%rax)*/
     movabs $cstart, %rbx
     call *%rbx
 go32:
@@ -71,32 +71,24 @@ go32:
 .section .data, "w"
 .align 0x1000,0
 GDT:
-.global GDT;
 // first descriptor in GDT is not used
 .quad 0
 // This is only used during bootstrap
 CS32:
-//.global CS32
 .int 0xffff, 10<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
 // Order of these segments must be preserved, so that SYSCALL works
 CS64:
-.global CS64
 .int 0xffff, 10<<8 + 1<<12 + 0<<13 + 1<<15 + 0xf <<16 + 1<<21 + 1<<23
 DS32:
-//.global DS32
 .int 0xffff, 2<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
 // Order of these segments must be preserved, so that SYSRET works
 CS32U:
-.global CS32U
 .int 0xffff, 10<<8 + 1<<12 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
 DS32U:
-.global DS32U
 .int 0xffff, 2<<8 + 1<<12 + 3<<13 + 1<<15 + 0xf <<16 + 1<<22 + 1<<23
 CS64U:
-.global CS64U
 .int 0xffff, 10<<8 + 1<<12 + 3<<13 + 1<<15 + 0xf <<16 + 1<<21 + 1<<23
 TSSD:
-.global TSSD
 .quad 0,0
 .align 0x1000,0
 //.quad 0,0,0,0
@@ -106,7 +98,6 @@ IDT:
 .int 0, 0, 0, 0
 .endr
 ENDIDT:
-.globl IDT;
 .align 0x1000,0
 
 // align the GDTR to the second word of the second int
@@ -128,7 +119,6 @@ IDTR:
 .int 0xffff8000
 
 .align 0x8,0
-.globl TSS
 TSS:
 .int 0 // reserved
 .quad 0 // rsp0
@@ -136,7 +126,6 @@ TSS:
 .quad 0 // rsp2
 .int 0 // reserved
 .int 0 // reserved
-.globl IST
 IST:
 .quad 0 // ist1
 .quad 0 // ist2
@@ -150,7 +139,6 @@ IST:
 
 // page tables
 .align 0x1000,0
-.globl PML4
 PML4:
 .quad PDPT + 1 + 2 // first 512 gb 
 .rept 510
@@ -158,18 +146,15 @@ PML4:
 .endr
 .quad PDPT2 + 1 + 2 + 4// last 512 gb
 .align 0x1000,0
-.globl PDPT
 PDPT: // covers first 512 gb of addresses
 .quad PD + 1 + 2
 .align 0x1000,0
-.globl PDPT2
 PDPT2: // covers last 512 gb of addresses
 .rept 510
 .quad 0
 .endr
 .quad PD + 1 + 2 + 4// 1gb 
 .align 0x1000,0
-.globl PD
 PD: // covers 1 gb of addresses
 .quad 0x0 * 0x200000 + 1 + 2 + 4 + 0 + 0 + 0 + 0 + 1<<7 + 0
 .quad 0x1 * 0x200000 + 1 + 0 + 4 + 0 + 0 + 0 + 0 + 1<<7 + 0

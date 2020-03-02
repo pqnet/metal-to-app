@@ -15,9 +15,9 @@
 #include "frame.h"
 #include "scheduler.h"
 #include "userspace.h"
-#include "tss.h"
 
 #include "syscall.h"
+#include "gdt.h"
 
 noreturn void idle_loop();
 noreturn void idle_loop()
@@ -33,13 +33,18 @@ noreturn void cstart(struct multiboot_info *multiboot);
 noreturn void cstart(struct multiboot_info *multiboot)
 {
     createKernelAddressSpace();
+    setup_frame_allocator(multiboot);
+
+    init_gdt();
+    init_tss();
     load_exceptions(); // load default CPU exception handlers into IDT
     load_interrupts(); // load hardware interrupt handlers into IDT and configure PIC
+    //init_idt();
+    load_gdt();
     load_tss();
-    load_ist0();
+    // load_idt();
     enable_interrupts();
 
-    setup_frame_allocator(multiboot);
 
     init_scheduler();
     setup_syscall();

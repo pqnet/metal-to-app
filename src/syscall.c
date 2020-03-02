@@ -1,10 +1,11 @@
-#include <stdint.h>
 #include "syscall.h"
 
+#include <stdint.h>
+#include <stddef.h>
+
+#include "gdt.h"
+
 extern void syscall_entry_asm();
-extern char CS64[1];
-extern char CS32U[1];
-extern char GDT[1];
 
 static inline void writemsr(uint32_t regaddr, uint64_t value)
 {
@@ -32,10 +33,10 @@ void setup_syscall()
   const uint32_t SFMASK_ADDR = 0xC0000084;
   uint64_t star = 0;
   // user code and stack segment used by SYSRET at 48:63
-  star += ((&CS32U - &GDT) & 0xffff);
+  star += offsetof(struct GDT, CS32U) & 0xffff;
   star <<= 16;
   // kernel code and stack segment used by SYSCALL at 32:47
-  star += (&CS64 - &GDT) & 0xffff;
+  star += offsetof(struct GDT, CS64) & 0xffff;
   star <<= 32;
   star += readmsr(STAR_ADDR) & 0xffffffff;
   writemsr(STAR_ADDR, star);
