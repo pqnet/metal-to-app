@@ -4,7 +4,7 @@
 .int 0xE4524FFE - 3 // 0xE4524FFE = -0x1BADB002 with 2 complement
 .code32
 MULTIBOOT_INFO_PTR:
-.int 0
+.quad 0
 .globl _start
 _start:
     mov %ebx, MULTIBOOT_INFO_PTR
