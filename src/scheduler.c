@@ -40,7 +40,7 @@ void start_task(
     }
 }
 
-uint64_t default_rflags = 0x246; // TODO
+const uint64_t default_rflags = 0x246; // TODO
 
 struct task *make_task(
     struct task *task,

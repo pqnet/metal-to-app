@@ -7,14 +7,10 @@ SECTIONS {
     /* first, we put bootloader at 1mb virtual address */
     . = 0x100000;
     .text0 : {
-        *bootstrap.o(.multiboot)
-        *bootstrap.o(.text)
-    }
-    .data0 : {
-        *bootstrap.o(.data)
+        *bootstrap.o(*)
     }
     . = ALIGN(0x200000);
-    .BOOTLOADER_END = .;
+    BOOTLOADER_END = .;
 
     /* we put kernel in the next available 2mb page after bootloader */
     . +=KERNEL_BASE;

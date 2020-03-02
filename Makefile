@@ -3,10 +3,9 @@ CC=clang-9
 ISOFILE=windows/img.iso
 
 TARGET=x86_64-none-elf
-FLAGS=-Werror -Wall -g -O2 -nostdlib -static -target $(TARGET)
-CFLAGS=-std=gnu2x -mcmodel=kernel -mno-red-zone -mno-sse -I./src -I./src/arch/x86_64
+FLAGS=-Werror -Wall -Os -nostdlib -static -target $(TARGET)
+CFLAGS=-fno-asynchronous-unwind-tables -std=gnu2x -mcmodel=kernel -mno-red-zone -mno-sse -I./src -I./src/arch/x86_64
 
-# -Wl,-z,max-page-size=0x200000
 LINK_FLAGS=-fno-exceptions -fno-unwind-tables -ffreestanding -Wl,-n -Wl,--build-id=none
 
 $(ISOFILE): kernel testelf iso/boot/grub/grub.cfg
@@ -32,7 +31,7 @@ src/main.o
 
 kernel: linker.ld $(OBJECTS) $(ARCH_OBJECTS) testelf
 	$(CC) $(FLAGS) $(LINK_FLAGS) -Wl,-T,linker.ld $(OBJECTS) $(ARCH_OBJECTS) -o $@
-	objcopy --add-gnu-debuglink=testelf kernel
+	# objcopy --add-gnu-debuglink=testelf kernel
 	grub-file --is-x86-multiboot $@
 
 %.o: %.s

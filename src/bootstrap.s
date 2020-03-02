@@ -1,16 +1,13 @@
-.section .multiboot, "d"
+.section .text
 .int 0x1BADB002
 .int 3
 .int 0xE4524FFE - 3 // 0xE4524FFE = -0x1BADB002 with 2 complement
-
-.section .text
-.align 8,0
-MULTIBOOT_INFO:
-.quad 0
 .code32
+MULTIBOOT_INFO_PTR:
+.int 0
 .globl _start
 _start:
-    mov %ebx, MULTIBOOT_INFO
+    mov %ebx, MULTIBOOT_INFO_PTR
     // disable paging (not necessary, grub does it for us)
     mov %cr0, %eax
     andl $0x7fffffff, %eax
@@ -44,7 +41,7 @@ _start:
     jmpl $(CS64 - GDT),$bootstrap64
 .code64
 bootstrap64:
-    mov MULTIBOOT_INFO, %rdi
+    mov MULTIBOOT_INFO_PTR, %rdi
     lea KERNEL_BASE(%rdi), %rdi
     mov $STACK_BOTTOM, %rbp
     mov %rbp, %rsp
@@ -52,8 +49,7 @@ bootstrap64:
     call *%rbx
     hlt
 
-.section .data, "w"
-.align 0x1000,0
+.align 0x8,0
 GDT:
 // first descriptor in GDT is not used
 .quad 0
