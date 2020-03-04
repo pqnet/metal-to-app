@@ -26,6 +26,11 @@ uint64_t syscall_abort()
   panic();
 }
 
+uint64_t syscall_yield() {
+  yield();
+  return 0;
+}
+
 uint64_t syscall_exit(uint64_t error_code)
 {
   // TODO implement
@@ -39,4 +44,5 @@ void load_syscall_table()
   syscall_table[0x01] = syscall_exit;
   syscall_table[0x11] = syscall_abort;
   syscall_table[0x04] = syscall_write;
+  syscall_table[0x99] = syscall_yield;
 }

@@ -37,3 +37,7 @@ int64_t write(int fd, const void *buf, size_t count)
 {
   return syscall(0x04, fd, (uint64_t)buf, count, 0, 0, 0);
 }
+
+void yield() {
+  syscall(0x99, 0, 0, 0, 0, 0, 0);
+}
