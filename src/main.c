@@ -1,12 +1,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdnoreturn.h>
+
 #include "print.h"
 #include "interrupts.h"
 #include "exceptions.h"
 #include "scheduler.h"
 
-#include "test_scheduler.h"
 #include "multiboot.h"
 #include "memory.h"
 
@@ -20,6 +20,8 @@
 #include "gdt.h"
 
 noreturn void idle_loop();
+noreturn void cstart(struct multiboot_info *multiboot);
+
 noreturn void idle_loop()
 {
     for (;;)
@@ -30,7 +32,6 @@ noreturn void idle_loop()
     }
 }
 
-noreturn void cstart(struct multiboot_info *multiboot);
 noreturn void cstart(struct multiboot_info *multiboot)
 {
     createKernelAddressSpace();
@@ -38,22 +39,24 @@ noreturn void cstart(struct multiboot_info *multiboot)
 
     init_gdt();
     init_tss();
-    load_exceptions(); // load default CPU exception handlers into IDT
-    load_interrupts(); // load hardware interrupt handlers into IDT and configure PIC
-    //init_idt();
+
     load_gdt();
     load_tss();
-    // load_idt();
+
+    load_exceptions(); // load default CPU exception handlers into IDT
+    load_interrupts(); // load hardware interrupt handlers into IDT and configure PIC
     enable_interrupts();
 
     init_scheduler();
     setup_syscall();
 
-    struct initrd_info m;
-    setup_initrd(multiboot, &m);
+    struct initrd_info m[10];
+    int processes = setup_initrd(multiboot, m);
 
-    struct task *initrd_task = make_userspace_process(m.start, m.end);
-    schedule(0, initrd_task, 0);
+    for (int i = 0; i < processes; i++) {
+        struct task *initrd_task = make_userspace_process(m[i].start, m[i].end, m[i].command_line);
+        schedule(i, initrd_task, 0);
+    }
 
     idle_loop();
 }
