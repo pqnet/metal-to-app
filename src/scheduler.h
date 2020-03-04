@@ -32,20 +32,17 @@ struct task
     uint64_t r15;
     uint64_t task_flags;
     linear_address address_space;
-    void * exception_frame_ptr;
 };
 static_assert(offsetof(struct task, task_flags) == 0xa0, "Wrong interrupt frame size");
 static_assert(offsetof(struct task, address_space) == 0xa8, "Wrong interrupt frame size");
-static_assert(offsetof(struct task, exception_frame_ptr) == 0xb0, "Wrong interrupt frame size");
 
 struct task *make_task(
     struct task *task,
     void *stack,
     void (*entry)(void *),
     void *arg,
-    void (*cleanup)(void *, struct task *, uint64_t),
-    void *cleanup_arg,
-    linear_address address_space);
+    linear_address address_space,
+    bool user_mode);
 
 struct scheduling_entry
 {

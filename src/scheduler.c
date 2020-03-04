@@ -5,6 +5,7 @@
 
 #include "interrupts.h"
 #include "memory.h"
+#include "gdt.h"
 
 static const uint64_t MAX_SUPPORTED_CPUS = 16;
 
@@ -19,27 +20,6 @@ struct task *get_current_task(uint64_t cpu_id)
 
 struct task idle_loop_task;
 
-void start_task(
-    uint64_t (*entry)(void *),
-    void *arg,
-    void (*cleanup)(void *, struct task *, uint64_t),
-    void *cleanup_arg,
-    struct task *task)
-{
-    uint64_t res = entry(arg);
-    if (cleanup != NULL)
-    {
-        cleanup(cleanup_arg, task, res);
-    }
-    else
-    {
-        while (true)
-        {
-            yield();
-        }
-    }
-}
-
 const uint64_t default_rflags = 0x246; // TODO
 
 struct task *make_task(
@@ -47,23 +27,17 @@ struct task *make_task(
     void *stack,
     void (*entry)(void *),
     void *arg,
-    void (*cleanup)(void *, struct task *, uint64_t),
-    void *cleanup_arg,
-    linear_address address_space)
+    linear_address address_space,
+    bool user_mode)
 {
-    task->RIP = start_task;
-    task->CS = 0x10; //get_current_task(0)->CS;
+    task->RIP = entry;
+    task->CS = user_mode ? offsetof(struct GDT, CS64U) + 3 : offsetof(struct GDT, CS64);
     task->RFLAGS = default_rflags;
-    task->SS = 0x18; //get_current_task(0)->SS;
+    task->SS = user_mode ? offsetof(struct GDT, DSU) + 3 : offsetof(struct GDT, DS);
     task->RSP = stack;
-    task->rdi = (uintptr_t)entry;
-    task->rsi = (uintptr_t)arg;
-    task->rdx = (uintptr_t)cleanup;
-    task->rcx = (uintptr_t)cleanup_arg;
-    task->r8 = (uintptr_t)task;
+    task->rdi = (uintptr_t)arg;
     task->task_flags = TASK_FLAG_MASK_CAN_EXECUTE;
     task->address_space = address_space ? address_space : kernel_address_space;
-    task->exception_frame_ptr = (char *)stack - sizeof(struct interrupt_frame) - sizeof(void *) - 16;
     return task;
 }
 
@@ -138,8 +112,9 @@ void init_scheduler()
 
 void yield()
 {
-    asm volatile("int $201\n" ::
-                     : "cc");
+    asm volatile(
+        "int $201\n" ::
+            : "cc");
 }
 
 void resume(struct task *resume_task)
