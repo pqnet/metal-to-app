@@ -62,7 +62,7 @@ void createKernelAddressSpace() {
         pdkernel[i].present = true;
         pdkernel[i].writable = false;
         pdkernel[i].big = true;
-        pdkernel[i].usermode = true;
+        pdkernel[i].usermode = false;
     }
     for (unsigned i = 0x10; i < 0x200; i++) {
         pdkernel[i].address = 0;
@@ -73,6 +73,7 @@ void createKernelAddressSpace() {
         pdkernel[i].usermode = false;
     }
     pdkernel[0].writable = true;
+    pdkernel[0].usermode = false;
     // TODO do not allow usermode processes to write here
     // pdkernel[0].usermode = false;
 

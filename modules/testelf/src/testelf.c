@@ -12,13 +12,14 @@ void _start(char *cmdline)
     buf[i] = cmdline[j];
     if (cmdline[j] == 0)
     {
-      break;
+      buf[i] = ' ';
+      j--;
     }
   }
   buf[31] = '\0';
   while (1)
   {
-    write(1, buf, 20);
+    write(1, buf, 31);
     yield();
   }
   //abort();

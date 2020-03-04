@@ -40,7 +40,7 @@ struct task *make_userspace_process(char *elfStart, char *elfEnd, char *command_
   mmap(initrd_address_space, initrd_stack, (char *)initrd_stack_addr - DEFAULT_FRAME_SIZE, true);
   // copy command line to the bottom of the stack
   unsigned argSize = strlen(command_line);
-  unsigned paddedArgSize = (argSize + 15) /16 * 16;
+  unsigned paddedArgSize = argSize /16 * 16 + 16;
   memcpy(linearAddressToPtr(initrd_stack + DEFAULT_FRAME_SIZE - paddedArgSize), command_line, argSize+1);
   make_task(ret, initrd_stack_addr - paddedArgSize, entry, initrd_stack_addr - paddedArgSize, pointerToLinearAddress(initrd_address_space), true);
   return ret;
