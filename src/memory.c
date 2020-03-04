@@ -4,22 +4,11 @@
 
 #include "interrupts.h"
 
-extern char KERNEL_BASE[1];
-
-alignas(0x1000) struct pagetable_entry pml4[512];
-alignas(0x1000) struct pagetable_entry pdkernel[512];
-alignas(0x1000) struct pagetable_entry pdpthigh[512];
-alignas(0x1000) struct pagetable_entry pdptlinear1[512];
+alignas(0x1000) struct pagetable_entry kernel_pml4[512];
+alignas(0x1000) struct pagetable_entry kernel_pagedir[512];
+alignas(0x1000) struct pagetable_entry kernel_pagedirtable[512];
+alignas(0x1000) struct pagetable_entry kernel_linear[512];
 linear_address kernel_address_space;
-
-static void * const LINEAR_START = (void*)0xFFFF800000000000;
-const linear_address addrshift4K = 1UL<<12; 
-const linear_address addrshift2M = addrshift4K<<9;
-const linear_address addrshift1G = addrshift2M<<9;
-const linear_address addrshift512G = addrshift1G<<9;
-static void * const LINEAR_END = LINEAR_START + addrshift512G;
-
-static void * const DYNAMIC_START = KERNEL_BASE + addrshift1G;
 
 /*
 static inline void reload_tlb(linear_address a) {
@@ -42,42 +31,42 @@ linear_address pointerToLinearAddress(void* ptr) {
 }
 
 void createKernelAddressSpace() {
-    kernel_address_space = pointerToLinearAddress(pml4); 
+    kernel_address_space = pointerToLinearAddress(kernel_pml4); 
     for (unsigned i = 0; i < 512; i++) {
-        pdptlinear1[i].address = i * addrshift1G;
-        pdptlinear1[i].present = true;
-        pdptlinear1[i].writable = true;
-        pdptlinear1[i].big = true;
+        kernel_linear[i].address = i * addrshift1G;
+        kernel_linear[i].present = true;
+        kernel_linear[i].writable = true;
+        kernel_linear[i].big = true;
     }
     for (unsigned i = 0; i < 512; i++) {
-        pdpthigh[i].address = 0;
+        kernel_pagedirtable[i].address = 0;
     }
-    pdpthigh[510].address = pointerToLinearAddress(pdkernel);
-    pdpthigh[510].present = true;
-    pdpthigh[510].writable = true;
-    pdpthigh[510].usermode = true;
+    kernel_pagedirtable[510].address = pointerToLinearAddress(kernel_pagedir);
+    kernel_pagedirtable[510].present = true;
+    kernel_pagedirtable[510].writable = true;
+    kernel_pagedirtable[510].usermode = true;
 
     for (unsigned i = 0x00; i < 0x10; i++) {
-        pdkernel[i].address = i * addrshift2M;
-        pdkernel[i].present = true;
-        pdkernel[i].writable = false;
-        pdkernel[i].big = true;
-        pdkernel[i].usermode = false;
+        kernel_pagedir[i].address = i * addrshift2M;
+        kernel_pagedir[i].present = true;
+        kernel_pagedir[i].writable = false;
+        kernel_pagedir[i].big = true;
+        kernel_pagedir[i].usermode = false;
     }
     for (unsigned i = 0x10; i < 0x200; i++) {
-        pdkernel[i].address = 0;
+        kernel_pagedir[i].address = 0;
     }
 
     for (unsigned i = 0x08; i < 0x10; i++) {
-        pdkernel[i].writable = true;
-        pdkernel[i].usermode = false;
+        kernel_pagedir[i].writable = true;
+        kernel_pagedir[i].usermode = false;
     }
-    pdkernel[0].writable = true;
-    pdkernel[0].usermode = false;
+    kernel_pagedir[0].writable = true;
+    kernel_pagedir[0].usermode = false;
     // TODO do not allow usermode processes to write here
     // pdkernel[0].usermode = false;
 
-    init_address_space(pml4);
+    init_address_space(kernel_pml4);
     asm volatile("mov %0, %%cr3"::"r"(kernel_address_space));
 }
 
@@ -86,11 +75,11 @@ void init_address_space(struct pagetable_entry root_pagetable[]) {
         root_pagetable[i].address = 0;
     }
     // map linear addresses into entry 256
-    root_pagetable[256].address = pointerToLinearAddress(pdptlinear1);
+    root_pagetable[256].address = pointerToLinearAddress(kernel_linear);
     root_pagetable[256].present = true;
     root_pagetable[256].writable = true;
     // map kernel memory into entry 511
-    root_pagetable[511].address = pointerToLinearAddress(pdpthigh);
+    root_pagetable[511].address = pointerToLinearAddress(kernel_pagedirtable);
     root_pagetable[511].present = true;
     root_pagetable[511].writable = true;
     root_pagetable[511].usermode = true;

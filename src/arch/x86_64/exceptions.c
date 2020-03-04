@@ -1,5 +1,6 @@
 #include "interrupts.h"
 #include "print.h"
+#include "map-dynamic.h"
 
 __attribute__ ((interrupt))
 void double_fault(struct interrupt_frame * frame, uint64_t error_code) {
@@ -46,13 +47,17 @@ void segment_not_present(struct interrupt_frame * frame, uint64_t error_code) {
 
 __attribute__ ((interrupt))
 void page_fault(struct interrupt_frame * frame, uint64_t error_code) {
+    uint64_t address;
+    asm volatile("mov %%cr2, %0": "=r"(address));
+    if (handle_dynamic_fault((void*)address)) {
+        return;
+    }
+
     print("Page fault code 0x");
     printhex(error_code);
 
     print(", address 0x");
-    uint64_t cr2;
-    asm volatile("mov %%cr2, %0": "=r"(cr2));
-    printhex(cr2);
+    printhex(address);
 
     print(", instruction: 0x");
     printhex((uintptr_t)frame->RIP);

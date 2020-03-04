@@ -7,6 +7,17 @@
 
 typedef uintptr_t linear_address;
 
+extern char KERNEL_BASE[1];
+
+static void * const LINEAR_START = (void*)0xFFFF800000000000;
+static const linear_address addrshift4K = 1UL<<12; 
+static const linear_address addrshift2M = addrshift4K<<9;
+static const linear_address addrshift1G = addrshift2M<<9;
+static const linear_address addrshift512G = addrshift1G<<9;
+static void * const LINEAR_END = LINEAR_START + addrshift512G;
+
+static void * const DYNAMIC_START = KERNEL_BASE + addrshift1G;
+
 struct pagetable_entry
 {
     union {
