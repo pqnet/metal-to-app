@@ -54,3 +54,4 @@ dkms.conf
 kernel
 testelf
 initrd
+.deps
